@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "nombre": "Cochecito de bebé",
+    "descripcion": "Modelo color gris o beige",
+    "imagen": "https://via.placeholder.com/300x200?text=Cochecito",
+    "reservado": false,
+    "reservadoPor": ""
+  },
+  {
+    "id": 2,
+    "nombre": "Cuna colecho",
+    "descripcion": "Ajustable a la cama",
+    "imagen": "https://via.placeholder.com/300x200?text=Cuna",
+    "reservado": false,
+    "reservadoPor": ""
+  },
+  {
+    "id": 3,
+    "nombre": "Set de biberones",
+    "descripcion": "Marca Avent o similar",
+    "imagen": "https://via.placeholder.com/300x200?text=Biberones",
+    "reservado": true,
+    "reservadoPor": "Tía María"
+  }
+]
