@@ -3,61 +3,101 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Baby Shower Melissa - Lista de Regalos</title>
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; text-align: center; }
-    h1 { color: #5b6577; }
-    .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 30px; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 280px; padding: 15px; text-align: left; position: relative; }
-    .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; }
-    .card h3 { margin: 10px 0 5px; color: #333; }
-    .card p { color: #666; font-size: 0.9em; }
-    .btn-reservar { background: #4caf50; color: white; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-    .btn-reservar:hover { background: #45a049; }
-    .reservado { background: #e0e0e0; color: #777; }
-    .badge { background: #ff5722; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; display: inline-block; margin-top: 5px; }
-  </style>
+  <title>La lista de Éster 🩷 Baby Shower</title>
+  <meta name="description" content="Lista de deseos para el Baby Shower de Éster. Elige un regalo y resérvalo para que no se repita.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎀</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Karla:wght@400;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-  <h1>Baby Shower de Melissa 🍼👶</h1>
-  <p>¡Elige el regalo que te gustaría hacernos!</p>
+<header class="hero">
+  <div class="floaties" aria-hidden="true">
+    <!-- Doodles decorativos -->
+    <svg class="floaty slow" style="top:13%;left:8%" width="52" height="52" viewBox="0 0 52 52" fill="none"><path d="M36 8a17 17 0 1 0 8 29c-5 3-12 3-17-2a15 15 0 0 1 9-27z" stroke="#c9b891" stroke-width="2.2" stroke-linejoin="round"/></svg>
+    <svg class="floaty" style="top:22%;right:9%" width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M16 3l3.2 9.4L29 16l-9.8 3.6L16 29l-3.2-9.4L3 16l9.8-3.6z" stroke="#e8a5b8" stroke-width="2" stroke-linejoin="round"/></svg>
+    <svg class="floaty slower" style="bottom:22%;left:15%" width="24" height="24" viewBox="0 0 32 32" fill="none"><path d="M16 3l3.2 9.4L29 16l-9.8 3.6L16 29l-3.2-9.4L3 16l9.8-3.6z" stroke="#d9a08b" stroke-width="2" stroke-linejoin="round"/></svg>
+    <svg class="floaty slower" style="top:50%;right:16%" width="78" height="42" viewBox="0 0 78 42" fill="none"><path d="M12 32c-6 0-8-7-3-10-1-8 8-12 13-7 2-7 13-8 16-1 7-3 14 3 11 10 5 2 4 8-2 8z" stroke="#c9b891" stroke-width="2.2" stroke-linejoin="round"/></svg>
+    <svg class="floaty" style="bottom:12%;right:32%" width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M13 22s-8-5.2-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 5.8-8 11-8 11z" stroke="#a8b79b" stroke-width="2" stroke-linejoin="round"/></svg>
+  </div>
 
-  <div id="contenedor-regalos" class="grid">Cargando regalos...</div>
+  <p class="kicker">Nuestra pequeña viene en camino</p>
+  <h1>La lista de <em>Éster</em></h1>
+  <p class="sub">Gracias por acompañarnos en esta bonita aventura. Aquí van algunas ideas de cosas que nos harían mucha ilusión — elige una y resérvala para que no haya regalos repetidos.</p>
+  <span class="hand">— Con muchísima ilusión, Melissa y Samuel 🩷</span>
 
-  <script>
-    // Tu número de WhatsApp con código de país (ejemplo de España +34)
-    const TU_WHATSAPP = "34600000000"; 
+  <div class="no-pressure">
+    <p><strong>Sin ningún compromiso 🤍</strong> Esto son solo ideas para quien le apetezca.
+    Podéis juntaros entre varios para un regalo, traer otra cosa que os haga ilusión…
+    o simplemente venir a darnos un abrazo, que es lo que más nos importa.</p>
+  </div>
 
-    fetch('regalos.json')
-      .then(response => response.json())
-      .then(regalos => {
-        const contenedor = document.getElementById('contenedor-regalos');
-        contenedor.innerHTML = '';
+  <div class="clothesline-wrap">
+    <svg id="clothesline" viewBox="0 0 600 96" aria-hidden="true"></svg>
+    <div class="clothesline-label" id="progress-count">…</div>
+  </div>
+</header>
 
-        regalos.forEach(regalo => {
-          const tarjeta = document.createElement('div');
-          tarjeta.className = 'card';
+<nav class="controls">
+  <div class="search-box">
+    <span aria-hidden="true">🔍</span>
+    <input type="search" id="search" placeholder="Buscar un regalo…" autocomplete="off">
+  </div>
+  <div class="controls-inner" id="controls">
+    <button class="chip active" data-cat="*">Todo</button>
+  </div>
+  <label class="toggle-claimed">
+    <input type="checkbox" id="hide-claimed"> Ocultar ya elegidos
+  </label>
+</nav>
 
-          let botonOEstado = '';
-          if (regalo.reservado) {
-            botonOEstado = `<span class="badge">Reservado por ${regalo.reservadoPor}</span>`;
-          } else {
-            const mensaje = encodeURIComponent(`¡Hola! Me gustaría reservar el regalo: ${regalo.nombre} para el Baby Shower.`);
-            const urlWhatsapp = `https://wa.me/${TU_WHATSAPP}?text=${mensaje}`;
-            botonOEstado = `<a href="${urlWhatsapp}" target="_blank" style="text-decoration:none;"><button class="btn-reservar">Reservar este regalo</button></a>`;
-          }
+<main id="list">
+  <div class="loading">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <p>Preparando la lista para Éster…</p>
+  </div>
+</main>
 
-          tarjeta.innerHTML = `
-            <img src="${regalo.imagen}" alt="${regalo.nombre}">
-            <h3>${regalo.nombre}</h3>
-            <p>${regalo.descripcion}</p>
-            ${botonOEstado}
-          `;
+<footer>
+  <p class="hand">¡Gracias de corazón!</p>
+  <p>Nada de esta lista es obligatorio: es solo para ayudar a quien quiera.<br>
+  Si preferís sorprendernos con otra cosa, o regalar algo entre varios, también nos encantará 🤍</p>
+</footer>
 
-          contenedor.appendChild(tarjeta);
-        });
-      });
-  </script>
+<!-- Modal de reserva -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" id="modal">
+    <span class="tag-hole" aria-hidden="true"></span>
+    <svg class="tag-string" width="110" height="80" viewBox="0 0 110 80" fill="none" aria-hidden="true"><path d="M4 6 C 30 10, 44 28, 55 56" stroke="#8d7f68" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 5"/></svg>
+    <div id="modal-form">
+      <h3>Reservar <span class="gift-name" id="modal-gift-name"></span></h3>
+      <p class="note" id="modal-note">Al reservarlo, desaparecerá como disponible para el resto de invitados. Tu nombre es opcional y solo lo veremos nosotros.</p>
+      <label for="claimer-name">Tu nombre (opcional)</label>
+      <input type="text" id="claimer-name" maxlength="80" placeholder="Ej.: la abuela Rosa, o «los primos de Tenerife»">
+      <label for="claimer-message">Un mensajito para Éster (opcional)</label>
+      <textarea id="claimer-message" rows="2" maxlength="300" placeholder="¡Bienvenida a nuestras vidas, Éster!"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modal-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="modal-confirm">Reservar 🎁</button>
+      </div>
+    </div>
+    <div id="modal-success" class="success" style="display:none">
+      <div class="big">🎀</div>
+      <h3 id="success-title">¡Reservado!</h3>
+      <p id="success-text">Mil gracias, nos hace muchísima ilusión.<br>Ya está marcado para que nadie lo repita.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="modal-close">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
 </body>
 </html>
