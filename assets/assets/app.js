@@ -1,8 +1,15 @@
 function initApp() {
+  const listEl = document.getElementById('list');
+
+  // 1. Verificar variables de configuración
   if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_KEY === 'undefined') {
-    console.error('Faltan las claves de Supabase en assets/config.js');
-    const listEl = document.getElementById('list');
-    if (listEl) listEl.innerHTML = `<div class="loading"><p>⚠️ Faltan las claves en assets/config.js</p></div>`;
+    if (listEl) {
+      listEl.innerHTML = `
+        <div class="loading" style="color: #c0392b; background: #fdf2e9; padding: 15px; border-radius: 8px;">
+          <p><strong>⚠️ Error de Configuración:</strong></p>
+          <p>No se encontró el archivo <code>assets/config.js</code> o las variables <code>SUPABASE_URL</code> y <code>SUPABASE_KEY</code> no están definidas.</p>
+        </div>`;
+    }
     return;
   }
 
@@ -11,7 +18,6 @@ function initApp() {
   let regalosList = [];
   let selectedGiftName = null;
 
-  const listEl = document.getElementById('list');
   const searchEl = document.getElementById('search');
   const hideClaimedEl = document.getElementById('hide-claimed');
   const progressCountEl = document.getElementById('progress-count');
@@ -30,15 +36,33 @@ function initApp() {
   async function loadGifts() {
     try {
       const { data, error } = await db.from('regalos').select('*');
+      
       if (error) throw error;
 
-      regalosList = data || [];
+      if (!data || data.length === 0) {
+        if (listEl) {
+          listEl.innerHTML = `
+            <div class="loading" style="color: #d35400; background: #fef5e7; padding: 15px; border-radius: 8px;">
+              <p><strong>⚠️ Sin regalos encontrados:</strong></p>
+              <p>La conexión con Supabase funcionó, pero se devolvieron 0 registros.</p>
+              <small>Revisa si desactivaste la opción <strong>RLS (Row Level Security)</strong> en tu tabla 'regalos' en Supabase.</small>
+            </div>`;
+        }
+        return;
+      }
+
+      regalosList = data;
       renderGifts();
       updateProgress();
+
     } catch (err) {
-      console.error('Error al cargar regalos:', err);
+      console.error('Error Supabase:', err);
       if (listEl) {
-        listEl.innerHTML = `<div class="loading"><p>⚠️ Error al conectar con Supabase: ${err.message || 'Verifica la configuración'}</p></div>`;
+        listEl.innerHTML = `
+          <div class="loading" style="color: #c0392b; background: #fdf2e9; padding: 15px; border-radius: 8px;">
+            <p><strong>⚠️ Error al conectar con Supabase:</strong></p>
+            <p>${err.message || JSON.stringify(err)}</p>
+          </div>`;
       }
     }
   }
@@ -50,14 +74,14 @@ function initApp() {
     const hideClaimed = hideClaimedEl ? hideClaimedEl.checked : false;
 
     const filtered = regalosList.filter(item => {
-      const matchesSearch = item.nombre.toLowerCase().includes(query) || 
+      const matchesSearch = (item.nombre && item.nombre.toLowerCase().includes(query)) || 
                             (item.descripcion && item.descripcion.toLowerCase().includes(query));
       const matchesClaimed = hideClaimed ? !item.reservado : true;
       return matchesSearch && matchesClaimed;
     });
 
     if (filtered.length === 0) {
-      listEl.innerHTML = `<div class="loading"><p>No se encontraron regalos disponibles 🌸</p></div>`;
+      listEl.innerHTML = `<div class="loading"><p>No hay regalos que coincidan con la búsqueda 🌸</p></div>`;
       return;
     }
 
@@ -105,7 +129,7 @@ function initApp() {
   function openModal(giftName) {
     if (modalGiftName) modalGiftName.textContent = giftName;
     if (claimerNameInput) claimerNameInput.value = '';
-    if (modalMsgInput = claimerMsgInput) claimerMsgInput.value = '';
+    if (claimerMsgInput) claimerMsgInput.value = '';
     if (modalForm) modalForm.style.display = 'block';
     if (modalSuccess) modalSuccess.style.display = 'none';
     if (modalBackdrop) modalBackdrop.classList.add('open');
@@ -152,7 +176,7 @@ function initApp() {
         await loadGifts();
       } catch (err) {
         console.error('Error reservando:', err);
-        alert('Ocurrió un error al reservar. Inténtalo de nuevo.');
+        alert('Ocurrió un error al reservar. Revisa los permisos (RLS) en Supabase.');
       } finally {
         btnConfirm.disabled = false;
         btnConfirm.textContent = 'Reservar 🎁';
@@ -173,7 +197,6 @@ function initApp() {
   loadGifts();
 }
 
-// Ejecutar inmediatamente si la página ya cargó
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
 } else {
