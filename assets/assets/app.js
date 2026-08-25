@@ -1,6 +1,8 @@
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_KEY === 'undefined') {
     console.error('Faltan las claves de Supabase en assets/config.js');
+    const listEl = document.getElementById('list');
+    if (listEl) listEl.innerHTML = `<div class="loading"><p>⚠️ Faltan las claves en assets/config.js</p></div>`;
     return;
   }
 
@@ -36,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('Error al cargar regalos:', err);
       if (listEl) {
-        listEl.innerHTML = `<div class="loading"><p>⚠️ Error al cargar los regalos.</p></div>`;
+        listEl.innerHTML = `<div class="loading"><p>⚠️ Error al conectar con Supabase: ${err.message || 'Verifica la configuración'}</p></div>`;
       }
     }
   }
@@ -55,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (filtered.length === 0) {
-      listEl.innerHTML = `<div class="loading"><p>No se encontraron regalos que coincidan 🌸</p></div>`;
+      listEl.innerHTML = `<div class="loading"><p>No se encontraron regalos disponibles 🌸</p></div>`;
       return;
     }
 
@@ -103,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function openModal(giftName) {
     if (modalGiftName) modalGiftName.textContent = giftName;
     if (claimerNameInput) claimerNameInput.value = '';
-    if (claimerMsgInput) claimerMsgInput.value = '';
+    if (modalMsgInput = claimerMsgInput) claimerMsgInput.value = '';
     if (modalForm) modalForm.style.display = 'block';
     if (modalSuccess) modalSuccess.style.display = 'none';
     if (modalBackdrop) modalBackdrop.classList.add('open');
@@ -169,4 +171,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (hideClaimedEl) hideClaimedEl.addEventListener('change', renderGifts);
 
   loadGifts();
-});
+}
+
+// Ejecutar inmediatamente si la página ya cargó
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
