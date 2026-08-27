@@ -41,7 +41,7 @@ function initApp() {
   }
 
   let regalosList = [];
-  let selectedGiftName = null;
+  let selectedGiftId = null;
 
   const searchEl = document.getElementById('search');
   const hideClaimedEl = document.getElementById('hide-claimed');
@@ -70,7 +70,7 @@ function initApp() {
 
   async function loadGifts() {
     try {
-      const { data, error } = await db.from('regalos').select('*');
+      const { data, error } = await db.from('regalos').select('*').order('id', { ascending: true });
       
       if (error) throw error;
 
@@ -85,7 +85,31 @@ function initApp() {
         return;
       }
 
-      regalosList = data;
+      regalosList = data.map(item => {
+        let reservantes = [];
+
+        // Leer lista de reservantes desde la base de datos
+        if (Array.isArray(item.reservantes)) {
+          reservantes = item.reservantes;
+        } else if (item.reservado_por) {
+          // Si hay texto antiguo en reservado_por, se intenta convertir a lista
+          reservantes = item.reservado_por.split(',').map(n => ({ nombre: n.trim() })).filter(n => n.nombre);
+        }
+
+        // Lee "max_reservas" o en su defecto "Maximo reservas" si no se renombró la columna
+        const maxReservas = parseInt(item.max_reservas || item['Maximo reservas'] || 1, 10);
+        
+        // Un regalo sólo está completo si ha alcanzado el límite máximo de reservas
+        const estaCompleto = reservantes.length >= maxReservas;
+
+        return {
+          ...item,
+          max_reservas: maxReservas,
+          reservantes: reservantes,
+          estaCompleto: estaCompleto
+        };
+      });
+
       renderGifts();
       updateProgress();
 
@@ -111,7 +135,7 @@ function initApp() {
       const nameMatch = item.nombre ? item.nombre.toLowerCase().includes(query) : false;
       const descMatch = item.descripcion ? item.descripcion.toLowerCase().includes(query) : false;
       const matchesSearch = nameMatch || descMatch;
-      const matchesClaimed = hideClaimed ? !item.reservado : true;
+      const matchesClaimed = hideClaimed ? !item.estaCompleto : true;
       return matchesSearch && matchesClaimed;
     });
 
@@ -123,18 +147,35 @@ function initApp() {
     listEl.innerHTML = '';
     filtered.forEach(item => {
       const card = document.createElement('article');
-      card.className = `gift-card ${item.reservado ? 'claimed' : ''}`;
+      card.className = `gift-card ${item.estaCompleto ? 'claimed' : ''}`;
 
       const textWa = encodeURIComponent(`Hola! Tengo una duda sobre el regalo "${item.nombre}" de la lista de Éster 👶`);
       const linkWaSamuel = `https://wa.me/${TEL_SAMUEL}?text=${textWa}`;
       const linkWaMelissa = `https://wa.me/${TEL_MELISSA}?text=${textWa}`;
 
-      const actionHTML = item.reservado
-        ? `<span class="tag-claimed">Reservado por ${item.reservado_por || 'un invitado'}</span>`
-        : `<button class="btn-reserve" data-name="${item.nombre}">Reservar este regalo 🎁</button>`;
+      let actionHTML = '';
+      let badgeHTML = '';
+
+      if (item.max_reservas > 1) {
+        const reservasHechas = item.reservantes.length;
+        badgeHTML = `<div class="spots-badge" style="display:inline-block; background:#fdf3f5; color:#b87a8b; font-weight:bold; font-size:0.8rem; padding:4px 10px; border-radius:12px; border:1px solid #f2cfd7; margin-bottom:8px;">👥 ${reservasHechas} de ${item.max_reservas} personas han reservado este regalo</div>`;
+      }
+
+      if (item.estaCompleto) {
+        const nombres = item.reservantes.map(r => r.nombre).join(', ');
+        actionHTML = `<span class="tag-claimed">Reservado (${nombres || 'Completo'})</span>`;
+      } else {
+        const disponibles = item.max_reservas - item.reservantes.length;
+        const ctaTexto = item.max_reservas > 1 ? `Reservar un cupo (${disponibles} disp.) 🎁` : `Reservar este regalo 🎁`;
+        actionHTML = `<button class="btn-reserve" data-id="${item.id}" data-name="${item.nombre}">${ctaTexto}</button>`;
+      }
+
+      const imgHTML = item.imagen ? `<img src="${item.imagen}" alt="${item.nombre}" style="width:100%; max-height:180px; object-fit:cover; border-radius:12px 12px 0 0;">` : '';
 
       card.innerHTML = `
+        ${imgHTML}
         <div class="gift-card-body" style="padding: 20px; width: 100%;">
+          ${badgeHTML}
           <h3 style="margin-top: 0; font-size: 1.25rem;">🎁 ${item.nombre || 'Regalo sin nombre'}</h3>
           <p style="margin: 8px 0 16px 0; color: #666;">${item.descripcion || ''}</p>
           
@@ -159,8 +200,9 @@ function initApp() {
 
     document.querySelectorAll('.btn-reserve').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        selectedGiftName = e.target.getAttribute('data-name');
-        openModal(selectedGiftName);
+        selectedGiftId = e.target.getAttribute('data-id');
+        const giftName = e.target.getAttribute('data-name');
+        openModal(giftName);
       });
     });
   }
@@ -168,8 +210,8 @@ function initApp() {
   function updateProgress() {
     if (!progressCountEl) return;
     const total = regalosList.length;
-    const reserved = regalosList.filter(r => r.reservado).length;
-    progressCountEl.textContent = `${reserved} de ${total} regalos reservados 🎀`;
+    const completados = regalosList.filter(r => r.estaCompleto).length;
+    progressCountEl.textContent = `${completados} de ${total} regalos completamente reservados 🎀`;
   }
 
   function openModal(giftName) {
@@ -183,10 +225,9 @@ function initApp() {
 
   function closeModal() {
     if (modalBackdrop) modalBackdrop.classList.remove('open');
-    selectedGiftName = null;
+    selectedGiftId = null;
   }
 
-  // Lógica Modal Sugerencia
   function openSuggestModal() {
     if (suggestTitleInput) suggestTitleInput.value = '';
     if (suggestDescInput) suggestDescInput.value = '';
@@ -206,7 +247,6 @@ function initApp() {
     });
   }
 
-  // Guardar nuevo regalo sugerido
   if (btnSuggestConfirm) {
     btnSuggestConfirm.addEventListener('click', async () => {
       const title = suggestTitleInput ? suggestTitleInput.value.trim() : '';
@@ -223,14 +263,16 @@ function initApp() {
       btnSuggestConfirm.textContent = 'Guardando...';
 
       try {
-        const { error } = await db.from('regalos').insert([
-          {
-            nombre: title,
-            descripcion: desc || 'Sugerencia añadida por un invitado 💡',
-            reservado: true,
-            reservado_por: finalName
-          }
-        ]);
+        const payload = {
+          nombre: title,
+          descripcion: desc || 'Sugerencia añadida por un invitado 💡',
+          reservado: true,
+          max_reservas: 1,
+          reservado_por: finalName,
+          reservantes: [{ nombre: finalName }]
+        };
+
+        const { error } = await db.from('regalos').insert([payload]);
 
         if (error) throw error;
 
@@ -258,21 +300,33 @@ function initApp() {
 
   if (btnConfirm) {
     btnConfirm.addEventListener('click', async () => {
-      if (!selectedGiftName) return;
+      if (!selectedGiftId) return;
+
+      const item = regalosList.find(r => String(r.id) === String(selectedGiftId));
+      if (!item) return;
 
       let name = claimerNameInput ? claimerNameInput.value.trim() : '';
       let msg = claimerMsgInput ? claimerMsgInput.value.trim() : '';
       let finalName = name !== '' ? name : 'Alguien muy especial';
       if (msg !== '') finalName += ` ("${msg}")`;
 
+      const nuevosReservantes = [...item.reservantes, { nombre: finalName }];
+      const estaCompleto = nuevosReservantes.length >= item.max_reservas;
+
       btnConfirm.disabled = true;
       btnConfirm.textContent = 'Guardando...';
 
       try {
+        const updatePayload = {
+          reservado: estaCompleto,
+          reservantes: nuevosReservantes,
+          reservado_por: nuevosReservantes.map(r => r.nombre).join(', ')
+        };
+
         const { error } = await db
           .from('regalos')
-          .update({ reservado: true, reservado_por: finalName })
-          .eq('nombre', selectedGiftName);
+          .update(updatePayload)
+          .eq('id', item.id);
 
         if (error) throw error;
 
