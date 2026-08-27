@@ -1,18 +1,41 @@
 function initApp() {
   const listEl = document.getElementById('list');
 
-  if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_KEY === 'undefined') {
+  if (typeof supabase === 'undefined') {
     if (listEl) {
       listEl.innerHTML = `
-        <div class="loading" style="color: #c0392b; background: #fdf2e9; padding: 15px; border-radius: 8px;">
-          <p><strong>⚠️ Error de Configuración:</strong></p>
-          <p>Faltan las variables en <code>assets/config.js</code>.</p>
+        <div style="background:#fce4e4; color:#900; padding:16px; border-radius:8px; text-align:center; margin:20px;">
+          <h3>⚠️ Error de Librería</h3>
+          <p>No se pudo cargar Supabase. Comprueba tu conexión a internet.</p>
         </div>`;
     }
     return;
   }
 
-  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_KEY === 'undefined' || !SUPABASE_URL || !SUPABASE_KEY) {
+    if (listEl) {
+      listEl.innerHTML = `
+        <div style="background:#fff3cd; color:#856404; padding:16px; border-radius:8px; text-align:center; margin:20px;">
+          <h3>⚠️ Error de Configuración</h3>
+          <p>Revisa las claves en <code>assets/config.js</code>.</p>
+        </div>`;
+    }
+    return;
+  }
+
+  let db;
+  try {
+    db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  } catch (err) {
+    if (listEl) {
+      listEl.innerHTML = `
+        <div style="background:#fce4e4; color:#900; padding:16px; border-radius:8px; text-align:center; margin:20px;">
+          <h3>⚠️ Error de Conexión</h3>
+          <p>${err.message}</p>
+        </div>`;
+    }
+    return;
+  }
 
   let regalosList = [];
   let selectedGiftName = null;
@@ -35,11 +58,16 @@ function initApp() {
   async function loadGifts() {
     try {
       const { data, error } = await db.from('regalos').select('*');
+      
       if (error) throw error;
 
       if (!data || data.length === 0) {
         if (listEl) {
-          listEl.innerHTML = `<div class="loading"><p>Sin regalos disponibles en la base de datos.</p></div>`;
+          listEl.innerHTML = `
+            <div style="background:#e8f4f8; color:#1b4965; padding:16px; border-radius:8px; text-align:center; margin:20px;">
+              <h3>🌸 Sin regalos encontrados</h3>
+              <p>No hay items en la lista por ahora.</p>
+            </div>`;
         }
         return;
       }
@@ -52,8 +80,9 @@ function initApp() {
       console.error('Error Supabase:', err);
       if (listEl) {
         listEl.innerHTML = `
-          <div class="loading" style="color: #c0392b; background: #fdf2e9; padding: 15px; border-radius: 8px;">
-            <p><strong>⚠️ Error al conectar con Supabase:</strong> ${err.message || 'Error desconocido'}</p>
+          <div style="background:#fce4e4; color:#900; padding:16px; border-radius:8px; text-align:center; margin:20px;">
+            <h3>⚠️ Error al conectar con la base de datos</h3>
+            <p>${err.message || 'Error de lectura'}</p>
           </div>`;
       }
     }
@@ -66,8 +95,9 @@ function initApp() {
     const hideClaimed = hideClaimedEl ? hideClaimedEl.checked : false;
 
     const filtered = regalosList.filter(item => {
-      const matchesSearch = (item.nombre && item.nombre.toLowerCase().includes(query)) || 
-                            (item.descripcion && item.descripcion.toLowerCase().includes(query));
+      const nameMatch = item.nombre ? item.nombre.toLowerCase().includes(query) : false;
+      const descMatch = item.descripcion ? item.descripcion.toLowerCase().includes(query) : false;
+      const matchesSearch = nameMatch || descMatch;
       const matchesClaimed = hideClaimed ? !item.reservado : true;
       return matchesSearch && matchesClaimed;
     });
@@ -82,18 +112,15 @@ function initApp() {
       const card = document.createElement('article');
       card.className = `gift-card ${item.reservado ? 'claimed' : ''}`;
 
-      const placeholderImg = 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400';
-      const imgSrc = item.imagen && item.imagen.trim() !== '' ? item.imagen : placeholderImg;
-
       const actionHTML = item.reservado
         ? `<span class="tag-claimed">Reservado por ${item.reservado_por || 'un invitado'}</span>`
         : `<button class="btn-reserve" data-name="${item.nombre}">Reservar este regalo 🎁</button>`;
 
+      // Renderizado sin etiqueta <img>
       card.innerHTML = `
-        <img src="${imgSrc}" alt="${item.nombre}" loading="lazy">
-        <div class="gift-card-body">
-          <h3>${item.nombre}</h3>
-          <p>${item.descripcion || ''}</p>
+        <div class="gift-card-body" style="padding: 20px; width: 100%;">
+          <h3 style="margin-top: 0; font-size: 1.25rem;">🎁 ${item.nombre || 'Regalo sin nombre'}</h3>
+          <p style="margin: 8px 0 16px 0; color: #666;">${item.descripcion || ''}</p>
           <div class="gift-status">
             ${actionHTML}
           </div>
@@ -168,7 +195,7 @@ function initApp() {
         await loadGifts();
       } catch (err) {
         console.error('Error reservando:', err);
-        alert('Ocurrió un error al reservar. Revisa los permisos (RLS) en Supabase.');
+        alert('Ocurrió un error al reservar: ' + (err.message || ''));
       } finally {
         btnConfirm.disabled = false;
         btnConfirm.textContent = 'Reservar 🎁';
