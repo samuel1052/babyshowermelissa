@@ -107,64 +107,6 @@
       background: #faf6f0;
       color: #b87a8b;
     }
-
-    /* Estilos para la Sección de la Porra */
-    .porra-section {
-      background: #fff;
-      border: 1px solid #e2d7c5;
-      border-radius: 20px;
-      padding: 24px;
-      margin: 40px auto;
-      max-width: 600px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-    }
-    .porra-section h2 {
-      text-align: center;
-      color: #5a4e3c;
-      margin-bottom: 8px;
-    }
-    .porra-section p.sub {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .porra-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    @media (max-width: 500px) {
-      .porra-grid { grid-template-columns: 1fr; }
-    }
-    .porra-field {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-bottom: 10px;
-    }
-    .porra-field label {
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #5a4e3c;
-    }
-    .porra-field input, .porra-field select {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 0.95rem;
-    }
-    .porra-bets-list {
-      margin-top: 24px;
-      border-top: 1px dashed #e2d7c5;
-      padding-top: 16px;
-    }
-    .porra-bet-item {
-      background: #faf6f0;
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 10px;
-      font-size: 0.9rem;
-      color: #4a4031;
-    }
   </style>
 </head>
 <body>
@@ -185,7 +127,7 @@
   <div style="background: rgba(255,255,255,0.85); display: inline-flex; flex-direction: column; gap: 8px; padding: 16px 24px; border-radius: 16px; margin: 14px 0; border: 1px solid #e2d7c5; text-align: center; color: #5a4e3c; font-size: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); max-width: 90%;">
     <div>📅 <strong>Fecha:</strong> 15 de Septiembre de 2026</div>
     <div>⏰ <strong>Hora:</strong> 17:30 hrs</div>
-    <div>📍 <strong>Lugar:</strong> <a href="Https://maps.app.goo.gl/wcsY46PrSXk3Q8VR8?g_st=ic" target="_blank" rel="noopener noreferrer" style="color: #b87a8b; font-weight: bold; text-decoration: underline;"> (Ver en Google Maps 🗺️)</a></div>
+    <div>📍 <strong>Lugar:</strong> <a href="Https://maps.app.goo.gl/wcsY46PrSXk3Q8VR8?g_st=ic" target="_blank" rel="noopener noreferrer" style="color: #b87a8b; font-weight: bold; text-decoration: underline;">Casa de Samuel y Melissa (Ver en Google Maps 🗺️)</a></div>
     
     <!-- BOTÓN AÑADIR AL CALENDARIO -->
     <div class="cal-dropdown">
@@ -249,51 +191,6 @@
   </div>
 </main>
 
-<!-- SECCIÓN DE LA PORRA -->
-<section class="porra-section">
-  <h2>🗳️ La Porra del Nacimiento de Éster</h2>
-  <p class="sub">¡Hagan sus apuestas! A ver quién se acerca más al día, peso y parecido de Éster 👶🩷</p>
-
-  <form id="porra-form">
-    <div class="porra-field">
-      <label for="porra-nombre">Tu nombre</label>
-      <input type="text" id="porra-nombre" required placeholder="Ej. Tía María">
-    </div>
-
-    <div class="porra-grid">
-      <div class="porra-field">
-        <label for="porra-fecha">¿Qué día nacerá?</label>
-        <input type="date" id="porra-fecha" required>
-      </div>
-      <div class="porra-field">
-        <label for="porra-peso">¿Cuánto pesará? (kg)</label>
-        <input type="text" id="porra-peso" required placeholder="Ej. 3.2 kg">
-      </div>
-      <div class="porra-field">
-        <label for="porra-altura">¿Cuánto medirá? (cm)</label>
-        <input type="text" id="porra-altura" required placeholder="Ej. 50 cm">
-      </div>
-      <div class="porra-field">
-        <label for="porra-parecido">¿A quién se parecerá?</label>
-        <select id="porra-parecido" required>
-          <option value="A Samuel">A Samuel 👨</option>
-          <option value="A Melissa">A Melissa 👩</option>
-          <option value="Un mix perfecto de los dos">Un mix de los dos 👩‍👨</option>
-        </select>
-      </div>
-    </div>
-
-    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">¡Dejar mi apuesta! 🎲</button>
-  </form>
-
-  <div class="porra-bets-list">
-    <h3 style="font-size: 1.05rem; color: #5a4e3c; margin-bottom: 12px;">Apuestas registradas:</h3>
-    <div id="porra-list">
-      <p style="color: #8c7f6e; text-align: center;">Cargando apuestas...</p>
-    </div>
-  </div>
-</section>
-
 <footer>
   <p class="hand">¡Gracias de corazón!</p>
   <p>Nada de esta lista es obligatorio: es solo para ayudar a quien quiera.<br>
@@ -332,7 +229,6 @@
 
 <!-- LÓGICA DEL CALENDARIO Y CONTADOR -->
 <script>
-  // Menú desplegable del calendario
   function toggleCalMenu(e) {
     e.stopPropagation();
     document.getElementById('cal-menu').classList.toggle('show');
@@ -343,7 +239,6 @@
     if (menu) menu.classList.remove('show');
   });
 
-  // Descarga del archivo .ics para Apple / iPhone / Outlook
   function downloadICS() {
     const icsData = [
       "BEGIN:VCALENDAR",
@@ -369,7 +264,6 @@
     document.body.removeChild(link);
   }
 
-  // Contador regresivo
   const targetDate = new Date('September 15, 2026 17:30:00').getTime();
 
   function updateCountdown() {
