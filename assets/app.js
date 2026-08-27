@@ -227,10 +227,80 @@ function initApp() {
     setTimeout(() => { toastEl.classList.remove('show'); }, 3500);
   }
 
+  /* --- LÓGICA DE LA PORRA --- */
+  const porraForm = document.getElementById('porra-form');
+  const porraListEl = document.getElementById('porra-list');
+
+  async function loadPorraBets() {
+    if (!porraListEl) return;
+    try {
+      const { data, error } = await db.from('porra').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        porraListEl.innerHTML = `<p style="color: #8c7f6e; text-align: center;">Aún no hay apuestas. ¡Sé el primero en participar!</p>`;
+        return;
+      }
+
+      porraListEl.innerHTML = '';
+      data.forEach(bet => {
+        const item = document.createElement('div');
+        item.className = 'porra-bet-item';
+        
+        // Formatear la fecha
+        const fechaPartes = bet.fecha_prediccion.split('-');
+        const fechaBonita = fechaPartes.length === 3 ? `${fechaPartes[2]}/${fechaPartes[1]}/${fechaPartes[0]}` : bet.fecha_prediccion;
+
+        item.innerHTML = `
+          <strong>👤 ${bet.nombre_invitado}</strong> apuesta que nacerá el <strong>📅 ${fechaBonita}</strong>, pesará <strong>⚖️ ${bet.peso}</strong>, medirá <strong>📏 ${bet.altura}</strong> y se parecerá a <strong>👀 ${bet.parecido}</strong>.
+        `;
+        porraListEl.appendChild(item);
+      });
+    } catch (err) {
+      console.error('Error cargando la porra:', err);
+      porraListEl.innerHTML = `<p style="color: #900;">No se pudieron cargar las apuestas.</p>`;
+    }
+  }
+
+  if (porraForm) {
+    porraForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const nombre = document.getElementById('porra-nombre').value.trim();
+      const fecha = document.getElementById('porra-fecha').value;
+      const peso = document.getElementById('porra-peso').value.trim();
+      const altura = document.getElementById('porra-altura').value.trim();
+      const parecido = document.getElementById('porra-parecido').value;
+
+      const submitBtn = porraForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Guardando apuesta...';
+
+      try {
+        const { error } = await db.from('porra').insert([
+          { nombre_invitado: nombre, fecha_prediccion: fecha, peso: peso, altura: altura, parecido: parecido }
+        ]);
+
+        if (error) throw error;
+
+        showToast('¡Apuesta guardada con éxito! 🎲');
+        porraForm.reset();
+        await loadPorraBets();
+      } catch (err) {
+        console.error('Error guardando apuesta:', err);
+        alert('Ocurrió un error al guardar la apuesta: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '¡Dejar mi apuesta! 🎲';
+      }
+    });
+  }
+
   if (searchEl) searchEl.addEventListener('input', renderGifts);
   if (hideClaimedEl) hideClaimedEl.addEventListener('change', renderGifts);
 
   loadGifts();
+  loadPorraBets();
 }
 
 if (document.readyState === 'loading') {
