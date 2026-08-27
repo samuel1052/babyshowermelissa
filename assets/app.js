@@ -68,6 +68,15 @@ function initApp() {
   const suggestDescInput = document.getElementById('suggest-desc');
   const suggestNameInput = document.getElementById('suggest-name');
 
+  // Modal Confirmación Asistencia (RSVP)
+  const rsvpModalBackdrop = document.getElementById('rsvp-modal-backdrop');
+  const btnOpenRsvp = document.getElementById('btn-open-rsvp');
+  const btnRsvpCancel = document.getElementById('rsvp-cancel');
+  const btnRsvpConfirm = document.getElementById('rsvp-confirm');
+  const rsvpNameInput = document.getElementById('rsvp-name');
+  const rsvpCountInput = document.getElementById('rsvp-count');
+  const rsvpCommentsInput = document.getElementById('rsvp-comments');
+
   async function loadGifts() {
     try {
       const { data, error } = await db.from('regalos').select('*').order('id', { ascending: true });
@@ -165,7 +174,6 @@ function initApp() {
         actionHTML = `<button class="btn-reserve" data-id="${item.id}" data-name="${item.nombre}">${ctaTexto}</button>`;
       }
 
-      // TARJETA SIN FOTO
       card.innerHTML = `
         <div class="gift-card-body" style="padding: 20px; width: 100%;">
           ${badgeHTML}
@@ -207,6 +215,64 @@ function initApp() {
     progressCountEl.textContent = `${completados} de ${total} regalos completamente reservados 🎀`;
   }
 
+  // --- Lógica del Modal RSVP (Asistencia) ---
+  function openRsvpModal() {
+    if (rsvpNameInput) rsvpNameInput.value = '';
+    if (rsvpCountInput) rsvpCountInput.value = '1';
+    if (rsvpCommentsInput) rsvpCommentsInput.value = '';
+    if (rsvpModalBackdrop) rsvpModalBackdrop.classList.add('open');
+  }
+
+  function closeRsvpModal() {
+    if (rsvpModalBackdrop) rsvpModalBackdrop.classList.remove('open');
+  }
+
+  if (btnOpenRsvp) btnOpenRsvp.addEventListener('click', openRsvpModal);
+  if (btnRsvpCancel) btnRsvpCancel.addEventListener('click', closeRsvpModal);
+  if (rsvpModalBackdrop) {
+    rsvpModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === rsvpModalBackdrop) closeRsvpModal();
+    });
+  }
+
+  if (btnRsvpConfirm) {
+    btnRsvpConfirm.addEventListener('click', async () => {
+      const name = rsvpNameInput ? rsvpNameInput.value.trim() : '';
+      const count = rsvpCountInput ? parseInt(rsvpCountInput.value, 10) : 1;
+      const comments = rsvpCommentsInput ? rsvpCommentsInput.value.trim() : '';
+
+      if (!name) {
+        alert('Por favor, introduce tu nombre para confirmar la asistencia.');
+        return;
+      }
+
+      btnRsvpConfirm.disabled = true;
+      btnRsvpConfirm.textContent = 'Guardando...';
+
+      try {
+        const { error } = await db.from('asistencias').insert([
+          {
+            nombre: name,
+            asistentes: count,
+            comentarios: comments
+          }
+        ]);
+
+        if (error) throw error;
+
+        closeRsvpModal();
+        showToast('¡Asistencia confirmada! Nos vemos pronto 💖');
+      } catch (err) {
+        console.error('Error al confirmar asistencia:', err);
+        alert('Ocurrió un error al guardar tu asistencia: ' + (err.message || ''));
+      } finally {
+        btnRsvpConfirm.disabled = false;
+        btnRsvpConfirm.textContent = 'Confirmar Asistencia ✨';
+      }
+    });
+  }
+
+  // --- Modales Estándar ---
   function openModal(giftName) {
     if (modalGiftName) modalGiftName.textContent = giftName;
     if (claimerNameInput) claimerNameInput.value = '';
