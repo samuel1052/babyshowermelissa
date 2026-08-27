@@ -1,3 +1,6 @@
+const TEL_SAMUEL = '34608761401';
+const TEL_MELISSA = '34674843664';
+
 function initApp() {
   const listEl = document.getElementById('list');
 
@@ -112,17 +115,31 @@ function initApp() {
       const card = document.createElement('article');
       card.className = `gift-card ${item.reservado ? 'claimed' : ''}`;
 
+      const textWa = encodeURIComponent(`Hola! Tengo una duda sobre el regalo "${item.nombre}" de la lista de Éster 👶`);
+      const linkWaSamuel = `https://wa.me/${TEL_SAMUEL}?text=${textWa}`;
+      const linkWaMelissa = `https://wa.me/${TEL_MELISSA}?text=${textWa}`;
+
       const actionHTML = item.reservado
         ? `<span class="tag-claimed">Reservado por ${item.reservado_por || 'un invitado'}</span>`
         : `<button class="btn-reserve" data-name="${item.nombre}">Reservar este regalo 🎁</button>`;
 
-      // Renderizado sin etiqueta <img>
       card.innerHTML = `
         <div class="gift-card-body" style="padding: 20px; width: 100%;">
           <h3 style="margin-top: 0; font-size: 1.25rem;">🎁 ${item.nombre || 'Regalo sin nombre'}</h3>
           <p style="margin: 8px 0 16px 0; color: #666;">${item.descripcion || ''}</p>
-          <div class="gift-status">
-            ${actionHTML}
+          
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div class="gift-status" style="margin-top:0;">
+              ${actionHTML}
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <a href="${linkWaSamuel}" target="_blank" rel="noopener noreferrer" style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
+                💬 Samuel
+              </a>
+              <a href="${linkWaMelissa}" target="_blank" rel="noopener noreferrer" style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
+                💬 Melissa
+              </a>
+            </div>
           </div>
         </div>
       `;
