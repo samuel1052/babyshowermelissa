@@ -107,6 +107,45 @@
       background: #faf6f0;
       color: #b87a8b;
     }
+
+    /* Tarjeta Banner para Sugerir Regalos */
+    .suggest-banner {
+      background: #fffdf9;
+      border: 2px dashed #b87a8b;
+      border-radius: 16px;
+      padding: 24px;
+      margin: 20px auto 30px auto;
+      max-width: 600px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(184, 122, 139, 0.08);
+    }
+    .suggest-banner h3 {
+      color: #5a4e3c;
+      margin: 0 0 8px 0;
+      font-size: 1.25rem;
+    }
+    .suggest-banner p {
+      color: #7a6e5d;
+      font-size: 0.95rem;
+      margin: 0 0 16px 0;
+      line-height: 1.4;
+    }
+    .btn-suggest {
+      background: #b87a8b;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(184, 122, 139, 0.3);
+      transition: all 0.2s ease;
+    }
+    .btn-suggest:hover {
+      background: #a36677;
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
@@ -184,6 +223,13 @@
   </label>
 </nav>
 
+<!-- CAJA PARA SUGERIR UN REGALO NUEVO -->
+<div class="suggest-banner">
+  <h3>💡 ¿Se te ocurre otra cosa que necesitemos?</h3>
+  <p>Si tienes en mente algún regalo especial o detalle útil que no está en la lista, ¡puedes añadirlo tú mismo/a y dejarlo reservado!</p>
+  <button class="btn-suggest" id="btn-open-suggest">➕ Añadir otro regalo a la lista</button>
+</div>
+
 <main id="list">
   <div class="loading">
     <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -221,6 +267,28 @@
       <div class="modal-actions">
         <button class="btn btn-primary" id="modal-close">Cerrar</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Sugerir/Añadir Regalo Nuevo -->
+<div class="modal-backdrop" id="suggest-modal-backdrop">
+  <div class="modal">
+    <h3>💡 Sugerir y reservar un nuevo regalo</h3>
+    <p class="note">Añade la idea que tienes pensada. Se guardará en la lista marcada como reservada por ti.</p>
+    
+    <label for="suggest-title">¿Qué regalo se te ha ocurrido? *</label>
+    <input type="text" id="suggest-title" maxlength="100" placeholder="Ej.: Conjunto de ropita 3-6 meses" required>
+
+    <label for="suggest-desc">Detalles o descripción (opcional)</label>
+    <textarea id="suggest-desc" rows="2" maxlength="200" placeholder="Ej.: Marca, color, talla o algún detalle..."></textarea>
+
+    <label for="suggest-name">Tu nombre (opcional)</label>
+    <input type="text" id="suggest-name" maxlength="80" placeholder="Ej.: Tía Ana">
+
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="btn btn-ghost" id="suggest-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="suggest-confirm">Añadir y Reservar 🎁</button>
     </div>
   </div>
 </div>
