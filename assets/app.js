@@ -47,6 +47,7 @@ function initApp() {
   const hideClaimedEl = document.getElementById('hide-claimed');
   const progressCountEl = document.getElementById('progress-count');
 
+  // Modal Reserva Normal
   const modalBackdrop = document.getElementById('modal-backdrop');
   const modalGiftName = document.getElementById('modal-gift-name');
   const claimerNameInput = document.getElementById('claimer-name');
@@ -57,6 +58,15 @@ function initApp() {
   const modalSuccess = document.getElementById('modal-success');
   const btnClose = document.getElementById('modal-close');
   const toastEl = document.getElementById('toast');
+
+  // Modal Sugerencia de Nuevo Regalo
+  const suggestModalBackdrop = document.getElementById('suggest-modal-backdrop');
+  const btnOpenSuggest = document.getElementById('btn-open-suggest');
+  const btnSuggestCancel = document.getElementById('suggest-cancel');
+  const btnSuggestConfirm = document.getElementById('suggest-confirm');
+  const suggestTitleInput = document.getElementById('suggest-title');
+  const suggestDescInput = document.getElementById('suggest-desc');
+  const suggestNameInput = document.getElementById('suggest-name');
 
   async function loadGifts() {
     try {
@@ -176,6 +186,67 @@ function initApp() {
     selectedGiftName = null;
   }
 
+  // Lógica Modal Sugerencia
+  function openSuggestModal() {
+    if (suggestTitleInput) suggestTitleInput.value = '';
+    if (suggestDescInput) suggestDescInput.value = '';
+    if (suggestNameInput) suggestNameInput.value = '';
+    if (suggestModalBackdrop) suggestModalBackdrop.classList.add('open');
+  }
+
+  function closeSuggestModal() {
+    if (suggestModalBackdrop) suggestModalBackdrop.classList.remove('open');
+  }
+
+  if (btnOpenSuggest) btnOpenSuggest.addEventListener('click', openSuggestModal);
+  if (btnSuggestCancel) btnSuggestCancel.addEventListener('click', closeSuggestModal);
+  if (suggestModalBackdrop) {
+    suggestModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === suggestModalBackdrop) closeSuggestModal();
+    });
+  }
+
+  // Guardar nuevo regalo sugerido
+  if (btnSuggestConfirm) {
+    btnSuggestConfirm.addEventListener('click', async () => {
+      const title = suggestTitleInput ? suggestTitleInput.value.trim() : '';
+      const desc = suggestDescInput ? suggestDescInput.value.trim() : '';
+      const name = suggestNameInput ? suggestNameInput.value.trim() : '';
+      const finalName = name !== '' ? name : 'Alguien muy especial';
+
+      if (!title) {
+        alert('Por favor, indica qué regalo te gustaría añadir.');
+        return;
+      }
+
+      btnSuggestConfirm.disabled = true;
+      btnSuggestConfirm.textContent = 'Guardando...';
+
+      try {
+        const { error } = await db.from('regalos').insert([
+          {
+            nombre: title,
+            descripcion: desc || 'Sugerencia añadida por un invitado 💡',
+            reservado: true,
+            reservado_por: finalName
+          }
+        ]);
+
+        if (error) throw error;
+
+        closeSuggestModal();
+        showToast('¡Tu regalo ha sido añadido y reservado! 🎁');
+        await loadGifts();
+      } catch (err) {
+        console.error('Error al sugerir regalo:', err);
+        alert('Ocurrió un error al guardar tu sugerencia: ' + (err.message || ''));
+      } finally {
+        btnSuggestConfirm.disabled = false;
+        btnSuggestConfirm.textContent = 'Añadir y Reservar 🎁';
+      }
+    });
+  }
+
   if (btnCancel) btnCancel.addEventListener('click', closeModal);
   if (btnClose) btnClose.addEventListener('click', closeModal);
 
@@ -227,80 +298,10 @@ function initApp() {
     setTimeout(() => { toastEl.classList.remove('show'); }, 3500);
   }
 
-  /* --- LÓGICA DE LA PORRA --- */
-  const porraForm = document.getElementById('porra-form');
-  const porraListEl = document.getElementById('porra-list');
-
-  async function loadPorraBets() {
-    if (!porraListEl) return;
-    try {
-      const { data, error } = await db.from('porra').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        porraListEl.innerHTML = `<p style="color: #8c7f6e; text-align: center;">Aún no hay apuestas. ¡Sé el primero en participar!</p>`;
-        return;
-      }
-
-      porraListEl.innerHTML = '';
-      data.forEach(bet => {
-        const item = document.createElement('div');
-        item.className = 'porra-bet-item';
-        
-        // Formatear la fecha
-        const fechaPartes = bet.fecha_prediccion.split('-');
-        const fechaBonita = fechaPartes.length === 3 ? `${fechaPartes[2]}/${fechaPartes[1]}/${fechaPartes[0]}` : bet.fecha_prediccion;
-
-        item.innerHTML = `
-          <strong>👤 ${bet.nombre_invitado}</strong> apuesta que nacerá el <strong>📅 ${fechaBonita}</strong>, pesará <strong>⚖️ ${bet.peso}</strong>, medirá <strong>📏 ${bet.altura}</strong> y se parecerá a <strong>👀 ${bet.parecido}</strong>.
-        `;
-        porraListEl.appendChild(item);
-      });
-    } catch (err) {
-      console.error('Error cargando la porra:', err);
-      porraListEl.innerHTML = `<p style="color: #900;">No se pudieron cargar las apuestas.</p>`;
-    }
-  }
-
-  if (porraForm) {
-    porraForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const nombre = document.getElementById('porra-nombre').value.trim();
-      const fecha = document.getElementById('porra-fecha').value;
-      const peso = document.getElementById('porra-peso').value.trim();
-      const altura = document.getElementById('porra-altura').value.trim();
-      const parecido = document.getElementById('porra-parecido').value;
-
-      const submitBtn = porraForm.querySelector('button[type="submit"]');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Guardando apuesta...';
-
-      try {
-        const { error } = await db.from('porra').insert([
-          { nombre_invitado: nombre, fecha_prediccion: fecha, peso: peso, altura: altura, parecido: parecido }
-        ]);
-
-        if (error) throw error;
-
-        showToast('¡Apuesta guardada con éxito! 🎲');
-        porraForm.reset();
-        await loadPorraBets();
-      } catch (err) {
-        console.error('Error guardando apuesta:', err);
-        alert('Ocurrió un error al guardar la apuesta: ' + err.message);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '¡Dejar mi apuesta! 🎲';
-      }
-    });
-  }
-
   if (searchEl) searchEl.addEventListener('input', renderGifts);
   if (hideClaimedEl) hideClaimedEl.addEventListener('change', renderGifts);
 
   loadGifts();
-  loadPorraBets();
 }
 
 if (document.readyState === 'loading') {
