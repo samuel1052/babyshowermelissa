@@ -70,7 +70,8 @@ function initApp() {
 
   async function loadGifts() {
     try {
-      const { data, error } = await db.from('regalos').select('*').order('id', { ascending: true });
+      // Consultar sin forzar ordenación por la columna id
+      const { data, error } = await db.from('regalos').select('*');
       
       if (error) throw error;
 
@@ -85,25 +86,24 @@ function initApp() {
         return;
       }
 
-      regalosList = data.map(item => {
+      regalosList = data.map((item, index) => {
         let reservantes = [];
 
-        // Leer lista de reservantes desde la base de datos
+        // Identificador flexible (por si no existe 'id')
+        const realId = item.id || item.id_regalo || item.ID || item.nombre || index;
+
         if (Array.isArray(item.reservantes)) {
           reservantes = item.reservantes;
         } else if (item.reservado_por) {
-          // Si hay texto antiguo en reservado_por, se intenta convertir a lista
           reservantes = item.reservado_por.split(',').map(n => ({ nombre: n.trim() })).filter(n => n.nombre);
         }
 
-        // Lee "max_reservas" o en su defecto "Maximo reservas" si no se renombró la columna
         const maxReservas = parseInt(item.max_reservas || item['Maximo reservas'] || 1, 10);
-        
-        // Un regalo sólo está completo si ha alcanzado el límite máximo de reservas
         const estaCompleto = reservantes.length >= maxReservas;
 
         return {
           ...item,
+          _uid: realId,
           max_reservas: maxReservas,
           reservantes: reservantes,
           estaCompleto: estaCompleto
@@ -167,7 +167,7 @@ function initApp() {
       } else {
         const disponibles = item.max_reservas - item.reservantes.length;
         const ctaTexto = item.max_reservas > 1 ? `Reservar un cupo (${disponibles} disp.) 🎁` : `Reservar este regalo 🎁`;
-        actionHTML = `<button class="btn-reserve" data-id="${item.id}" data-name="${item.nombre}">${ctaTexto}</button>`;
+        actionHTML = `<button class="btn-reserve" data-id="${item._uid}" data-name="${item.nombre}">${ctaTexto}</button>`;
       }
 
       const imgHTML = item.imagen ? `<img src="${item.imagen}" alt="${item.nombre}" style="width:100%; max-height:180px; object-fit:cover; border-radius:12px 12px 0 0;">` : '';
@@ -302,7 +302,7 @@ function initApp() {
     btnConfirm.addEventListener('click', async () => {
       if (!selectedGiftId) return;
 
-      const item = regalosList.find(r => String(r.id) === String(selectedGiftId));
+      const item = regalosList.find(r => String(r._uid) === String(selectedGiftId));
       if (!item) return;
 
       let name = claimerNameInput ? claimerNameInput.value.trim() : '';
@@ -323,10 +323,17 @@ function initApp() {
           reservado_por: nuevosReservantes.map(r => r.nombre).join(', ')
         };
 
-        const { error } = await db
-          .from('regalos')
-          .update(updatePayload)
-          .eq('id', item.id);
+        let query = db.from('regalos').update(updatePayload);
+
+        if (item.id) {
+          query = query.eq('id', item.id);
+        } else if (item.id_regalo) {
+          query = query.eq('id_regalo', item.id_regalo);
+        } else {
+          query = query.eq('nombre', item.nombre);
+        }
+
+        const { error } = await query;
 
         if (error) throw error;
 
