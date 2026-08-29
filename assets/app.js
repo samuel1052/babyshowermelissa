@@ -151,21 +151,18 @@ function renderGifts() {
   });
 }
 
+// TARJETA DE REGALO SIN FOTOS
 function createGiftCard(gift) {
   const isClaimed = !!gift.reservado;
-  const imgUrl = gift.imagen_url || gift.image_url || 'https://via.placeholder.com/300x200?text=Regalo+%C3%89ster';
   
   return `
     <div class="card ${isClaimed ? 'claimed' : ''}">
-      <div class="card-img-wrap">
-        <img src="${imgUrl}" alt="${gift.nombre || ''}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x200?text=Regalo'">
-        ${isClaimed ? '<span class="claimed-badge">Reservado 🎀</span>' : ''}
-      </div>
       <div class="card-body">
+        ${isClaimed ? '<div style="margin-bottom:8px;"><span class="claimed-badge">Reservado 🎀</span></div>' : ''}
         <h3 class="card-title">${gift.nombre || ''}</h3>
         <p class="card-desc">${gift.descripcion || ''}</p>
         ${gift.link ? `<a href="${gift.link}" target="_blank" rel="noopener" class="card-link">Ver idea de referencia ↗</a>` : ''}
-        <div class="card-footer">
+        <div class="card-footer" style="margin-top:15px;">
           ${isClaimed ? `
             <button class="btn btn-disabled" disabled>
               ${gift.reservado_por ? `Reservado por ${gift.reservado_por}` : 'Reservado'}
