@@ -1,50 +1,75 @@
-// 1. CONFIGURACIÓN DE SUPABASE
+// CONFIGURACIÓN DE SUPABASE
 const SUPABASE_URL = 'https://yobstbrdvnqaoydrjhhk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_laR6A943f2AxxCF0DuRckA_10ojnXjS';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvYnN0YnJkdm5xYW95ZHJqaGhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1ODIwNTksImV4cCI6MjEwMzE1ODA1OX0.nITMqJofv5hMFVrpMTWX31jJJ4AG_R_frQ8dJeRdlqk';
 
-// Inicializar Supabase
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+let supabaseClient = null;
 let giftsData = [];
 let currentCategory = '*';
 let selectedGiftId = null;
 
 // Elementos DOM
-const listEl = document.getElementById('list');
-const searchEl = document.getElementById('search');
-const controlsEl = document.getElementById('controls');
-const hideClaimedEl = document.getElementById('hide-claimed');
-const progressCountEl = document.getElementById('progress-count');
+let listEl, searchEl, controlsEl, hideClaimedEl, progressCountEl;
+let modalBackdrop, modalGiftName, modalForm, modalSuccess, claimerNameInput, claimerMessageInput;
+let suggestModalBackdrop, rsvpModalBackdrop;
 
-// Modales
-const modalBackdrop = document.getElementById('modal-backdrop');
-const modalGiftName = document.getElementById('modal-gift-name');
-const modalForm = document.getElementById('modal-form');
-const modalSuccess = document.getElementById('modal-success');
-const claimerNameInput = document.getElementById('claimer-name');
-const claimerMessageInput = document.getElementById('claimer-message');
+function initSupabase() {
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+}
 
-const suggestModalBackdrop = document.getElementById('suggest-modal-backdrop');
-const rsvpModalBackdrop = document.getElementById('rsvp-modal-backdrop');
-
-// Cargar Regalos al Iniciar
 document.addEventListener('DOMContentLoaded', () => {
+  listEl = document.getElementById('list');
+  searchEl = document.getElementById('search');
+  controlsEl = document.getElementById('controls');
+  hideClaimedEl = document.getElementById('hide-claimed');
+  progressCountEl = document.getElementById('progress-count');
+
+  modalBackdrop = document.getElementById('modal-backdrop');
+  modalGiftName = document.getElementById('modal-gift-name');
+  modalForm = document.getElementById('modal-form');
+  modalSuccess = document.getElementById('modal-success');
+  claimerNameInput = document.getElementById('claimer-name');
+  claimerMessageInput = document.getElementById('claimer-message');
+
+  suggestModalBackdrop = document.getElementById('suggest-modal-backdrop');
+  rsvpModalBackdrop = document.getElementById('rsvp-modal-backdrop');
+
+  initSupabase();
   fetchGifts();
   setupEventListeners();
 });
 
 async function fetchGifts() {
+  if (!supabaseClient) {
+    initSupabase();
+  }
+  
+  if (!supabaseClient) {
+    console.error('No se pudo inicializar Supabase.');
+    if (listEl) {
+      listEl.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: #a33;">
+          <h3>⚠️ Error de conexión</h3>
+          <p>No se pudo conectar con la base de datos.</p>
+          <button onclick="location.reload()" class="btn btn-primary" style="margin-top:10px;">Recargar página</button>
+        </div>`;
+    }
+    return;
+  }
+
   try {
-    listEl.innerHTML = `
-      <div class="loading">
-        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        <p>Cargando la lista para Éster…</p>
-      </div>`;
+    if (listEl) {
+      listEl.innerHTML = `
+        <div class="loading">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <p>Cargando la lista para Éster…</p>
+        </div>`;
+    }
 
     const { data, error } = await supabaseClient
       .from('regalos')
-      .select('*')
-      .order('id', { ascending: true });
+      .select('*');
 
     if (error) throw error;
 
@@ -54,12 +79,14 @@ async function fetchGifts() {
     updateProgress();
   } catch (err) {
     console.error('Error fetching gifts:', err);
-    listEl.innerHTML = `
-      <div style="text-align: center; padding: 40px 20px; color: #a33;">
-        <h3>⚠️ No se pudieron cargar los regalos</h3>
-        <p>Por favor comprueba la conexión o inténtalo de nuevo en unos momentos.</p>
-        <button onclick="fetchGifts()" class="btn btn-primary" style="margin-top:10px;">Reintentar</button>
-      </div>`;
+    if (listEl) {
+      listEl.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: #a33;">
+          <h3>⚠️ No se pudieron cargar los regalos</h3>
+          <p>${err.message || 'Error al conectar con la base de datos.'}</p>
+          <button onclick="fetchGifts()" class="btn btn-primary" style="margin-top:10px;">Reintentar</button>
+        </div>`;
+    }
   }
 }
 
@@ -97,6 +124,7 @@ function renderCategories() {
 }
 
 function renderGifts() {
+  if (!listEl) return;
   const query = (searchEl?.value || '').toLowerCase().trim();
   const hideClaimed = hideClaimedEl?.checked || false;
 
@@ -115,7 +143,6 @@ function renderGifts() {
 
   listEl.innerHTML = `<div class="grid">${filtered.map(createGiftCard).join('')}</div>`;
 
-  // Asignar eventos a botones de reservar
   listEl.querySelectorAll('.btn-reserve').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
@@ -131,11 +158,11 @@ function createGiftCard(gift) {
   return `
     <div class="card ${isClaimed ? 'claimed' : ''}">
       <div class="card-img-wrap">
-        <img src="${imgUrl}" alt="${gift.nombre}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x200?text=Regalo'">
+        <img src="${imgUrl}" alt="${gift.nombre || ''}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x200?text=Regalo'">
         ${isClaimed ? '<span class="claimed-badge">Reservado 🎀</span>' : ''}
       </div>
       <div class="card-body">
-        <h3 class="card-title">${gift.nombre}</h3>
+        <h3 class="card-title">${gift.nombre || ''}</h3>
         <p class="card-desc">${gift.descripcion || ''}</p>
         ${gift.link ? `<a href="${gift.link}" target="_blank" rel="noopener" class="card-link">Ver idea de referencia ↗</a>` : ''}
         <div class="card-footer">
@@ -154,23 +181,23 @@ function createGiftCard(gift) {
   `;
 }
 
-// RESERVAR REGALO
 function openReserveModal(id) {
   const gift = giftsData.find(g => g.id == id);
   if (!gift) return;
   selectedGiftId = id;
-  modalGiftName.textContent = gift.nombre;
-  modalForm.style.display = 'block';
-  modalSuccess.style.display = 'none';
-  claimerNameInput.value = '';
+  if (modalGiftName) modalGiftName.textContent = gift.nombre;
+  if (modalForm) modalForm.style.display = 'block';
+  if (modalSuccess) modalSuccess.style.display = 'none';
+  if (claimerNameInput) claimerNameInput.value = '';
   if (claimerMessageInput) claimerMessageInput.value = '';
-  modalBackdrop.classList.add('show');
+  if (modalBackdrop) modalBackdrop.classList.add('show');
 }
 
 async function confirmReservation() {
-  if (!selectedGiftId) return;
+  if (!selectedGiftId || !supabaseClient) return;
 
-  const name = claimerNameInput.value.trim() || 'Alguien especial';
+  const name = claimerNameInput ? claimerNameInput.value.trim() : '';
+  const finalName = name || 'Alguien especial';
   const msg = claimerMessageInput ? claimerMessageInput.value.trim() : '';
 
   try {
@@ -178,15 +205,15 @@ async function confirmReservation() {
       .from('regalos')
       .update({
         reservado: true,
-        reservado_por: name,
+        reservado_por: finalName,
         mensaje: msg
       })
       .eq('id', selectedGiftId);
 
     if (error) throw error;
 
-    modalForm.style.display = 'none';
-    modalSuccess.style.display = 'block';
+    if (modalForm) modalForm.style.display = 'none';
+    if (modalSuccess) modalSuccess.style.display = 'block';
     showToast('¡Regalo reservado con éxito!');
     fetchGifts();
   } catch (err) {
@@ -195,39 +222,40 @@ async function confirmReservation() {
   }
 }
 
-// EVENT LISTENERS
 function setupEventListeners() {
   if (searchEl) searchEl.addEventListener('input', renderGifts);
   if (hideClaimedEl) hideClaimedEl.addEventListener('change', renderGifts);
 
-  document.getElementById('modal-cancel')?.addEventListener('click', () => modalBackdrop.classList.remove('show'));
-  document.getElementById('modal-close')?.addEventListener('click', () => modalBackdrop.classList.remove('show'));
+  document.getElementById('modal-cancel')?.addEventListener('click', () => modalBackdrop?.classList.remove('show'));
+  document.getElementById('modal-close')?.addEventListener('click', () => modalBackdrop?.classList.remove('show'));
   document.getElementById('modal-confirm')?.addEventListener('click', confirmReservation);
 
-  // Sugerir regalo
   document.getElementById('btn-open-suggest')?.addEventListener('click', () => {
-    suggestModalBackdrop.classList.add('show');
+    suggestModalBackdrop?.classList.add('show');
   });
   document.getElementById('suggest-cancel')?.addEventListener('click', () => {
-    suggestModalBackdrop.classList.remove('show');
+    suggestModalBackdrop?.classList.remove('show');
   });
   document.getElementById('suggest-confirm')?.addEventListener('click', submitSuggestion);
 
-  // Confirmar Asistencia (RSVP)
   document.getElementById('btn-open-rsvp')?.addEventListener('click', () => {
-    rsvpModalBackdrop.classList.add('show');
+    rsvpModalBackdrop?.classList.add('show');
   });
   document.getElementById('rsvp-cancel')?.addEventListener('click', () => {
-    rsvpModalBackdrop.classList.remove('show');
+    rsvpModalBackdrop?.classList.remove('show');
   });
   document.getElementById('rsvp-confirm')?.addEventListener('click', submitRSVP);
 }
 
-// SUGERIR Y RESERVAR
 async function submitSuggestion() {
-  const title = document.getElementById('suggest-title').value.trim();
-  const desc = document.getElementById('suggest-desc').value.trim();
-  const name = document.getElementById('suggest-name').value.trim() || 'Alguien especial';
+  const titleEl = document.getElementById('suggest-title');
+  const descEl = document.getElementById('suggest-desc');
+  const nameEl = document.getElementById('suggest-name');
+
+  const title = titleEl ? titleEl.value.trim() : '';
+  const desc = descEl ? descEl.value.trim() : '';
+  const name = nameEl ? nameEl.value.trim() : '';
+  const finalName = name || 'Alguien especial';
 
   if (!title) {
     alert('Por favor escribe el nombre del regalo.');
@@ -241,17 +269,17 @@ async function submitSuggestion() {
         nombre: title,
         descripcion: desc,
         reservado: true,
-        reservado_por: name,
+        reservado_por: finalName,
         categoria: 'Sugerencias'
       }]);
 
     if (error) throw error;
 
-    suggestModalBackdrop.classList.remove('show');
+    suggestModalBackdrop?.classList.remove('show');
     showToast('¡Sugerencia añadida y reservada!');
-    document.getElementById('suggest-title').value = '';
-    document.getElementById('suggest-desc').value = '';
-    document.getElementById('suggest-name').value = '';
+    if (titleEl) titleEl.value = '';
+    if (descEl) descEl.value = '';
+    if (nameEl) nameEl.value = '';
     fetchGifts();
   } catch (err) {
     console.error('Error al sugerir:', err);
@@ -259,11 +287,14 @@ async function submitSuggestion() {
   }
 }
 
-// CONFIRMAR ASISTENCIA
 async function submitRSVP() {
-  const name = document.getElementById('rsvp-name').value.trim();
-  const count = document.getElementById('rsvp-count').value;
-  const comments = document.getElementById('rsvp-comments').value.trim();
+  const nameEl = document.getElementById('rsvp-name');
+  const countEl = document.getElementById('rsvp-count');
+  const commentsEl = document.getElementById('rsvp-comments');
+
+  const name = nameEl ? nameEl.value.trim() : '';
+  const count = countEl ? countEl.value : '1';
+  const comments = commentsEl ? commentsEl.value.trim() : '';
 
   if (!name) {
     alert('Por favor introduce tu nombre y apellidos.');
@@ -281,10 +312,10 @@ async function submitRSVP() {
 
     if (error) throw error;
 
-    rsvpModalBackdrop.classList.remove('show');
+    rsvpModalBackdrop?.classList.remove('show');
     showToast('¡Asistencia confirmada! Mil gracias 🩷');
-    document.getElementById('rsvp-name').value = '';
-    document.getElementById('rsvp-comments').value = '';
+    if (nameEl) nameEl.value = '';
+    if (commentsEl) commentsEl.value = '';
   } catch (err) {
     console.error('Error al guardar asistencia:', err);
     alert('No se pudo confirmar la asistencia.');
