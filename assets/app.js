@@ -1,284 +1,300 @@
-// Manejo de la aplicación Baby Shower
+// 1. CONFIGURACIÓN DE SUPABASE
+const SUPABASE_URL = 'https://yobstbrdvnqaoydrjhhk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_laR6A943f2AxxCF0DuRckA_10ojnXjS';
+
+// Inicializar Supabase
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let giftsData = [];
+let currentCategory = '*';
+let selectedGiftId = null;
+
+// Elementos DOM
+const listEl = document.getElementById('list');
+const searchEl = document.getElementById('search');
+const controlsEl = document.getElementById('controls');
+const hideClaimedEl = document.getElementById('hide-claimed');
+const progressCountEl = document.getElementById('progress-count');
+
+// Modales
+const modalBackdrop = document.getElementById('modal-backdrop');
+const modalGiftName = document.getElementById('modal-gift-name');
+const modalForm = document.getElementById('modal-form');
+const modalSuccess = document.getElementById('modal-success');
+const claimerNameInput = document.getElementById('claimer-name');
+const claimerMessageInput = document.getElementById('claimer-message');
+
+const suggestModalBackdrop = document.getElementById('suggest-modal-backdrop');
+const rsvpModalBackdrop = document.getElementById('rsvp-modal-backdrop');
+
+// Cargar Regalos al Iniciar
 document.addEventListener('DOMContentLoaded', () => {
-  const listContainer = document.getElementById('list');
+  fetchGifts();
+  setupEventListeners();
+});
 
-  // Claves de Supabase integradas directamente
-  const supabaseUrl = "https://yobstbrdvnqaoydrjhhk.supabase.co";
-  const supabaseKey = "sb_publishable_laR6A943f2AxxCF0DuRckA_10ojnXjS";
+async function fetchGifts() {
+  try {
+    listEl.innerHTML = `
+      <div class="loading">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <p>Cargando la lista para Éster…</p>
+      </div>`;
 
-  // Verificar librería de Supabase
-  if (typeof window.supabase === 'undefined') {
-    console.error('La librería de Supabase no se ha cargado.');
-    if (listContainer) {
-      listContainer.innerHTML = '<p class="error">Error al conectar con la base de datos (Supabase CDN no disponible). Recarga la página.</p>';
+    const { data, error } = await supabaseClient
+      .from('regalos')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error) throw error;
+
+    giftsData = data || [];
+    renderCategories();
+    renderGifts();
+    updateProgress();
+  } catch (err) {
+    console.error('Error fetching gifts:', err);
+    listEl.innerHTML = `
+      <div style="text-align: center; padding: 40px 20px; color: #a33;">
+        <h3>⚠️ No se pudieron cargar los regalos</h3>
+        <p>Por favor comprueba la conexión o inténtalo de nuevo en unos momentos.</p>
+        <button onclick="fetchGifts()" class="btn btn-primary" style="margin-top:10px;">Reintentar</button>
+      </div>`;
+  }
+}
+
+function updateProgress() {
+  if (!giftsData.length) return;
+  const reserved = giftsData.filter(g => g.reservado).length;
+  if (progressCountEl) {
+    progressCountEl.textContent = `${reserved} de ${giftsData.length} regalos reservados 🩷`;
+  }
+}
+
+function renderCategories() {
+  if (!controlsEl) return;
+  const categories = ['*'];
+  giftsData.forEach(g => {
+    if (g.categoria && !categories.includes(g.categoria)) {
+      categories.push(g.categoria);
     }
+  });
+
+  controlsEl.innerHTML = categories.map(cat => `
+    <button class="chip ${cat === currentCategory ? 'active' : ''}" data-cat="${cat}">
+      ${cat === '*' ? 'Todo' : cat}
+    </button>
+  `).join('');
+
+  controlsEl.querySelectorAll('.chip').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      controlsEl.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      e.target.classList.add('active');
+      currentCategory = e.target.getAttribute('data-cat');
+      renderGifts();
+    });
+  });
+}
+
+function renderGifts() {
+  const query = (searchEl?.value || '').toLowerCase().trim();
+  const hideClaimed = hideClaimedEl?.checked || false;
+
+  const filtered = giftsData.filter(gift => {
+    const matchesCat = currentCategory === '*' || gift.categoria === currentCategory;
+    const matchesSearch = (gift.nombre || '').toLowerCase().includes(query) ||
+                          (gift.descripcion || '').toLowerCase().includes(query);
+    const matchesClaimed = hideClaimed ? !gift.reservado : true;
+    return matchesCat && matchesSearch && matchesClaimed;
+  });
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div style="text-align:center; padding: 40px; color: #7a6e5d;">No se encontraron regalos.</div>`;
     return;
   }
 
-  const db = window.supabase.createClient(supabaseUrl, supabaseKey);
+  listEl.innerHTML = `<div class="grid">${filtered.map(createGiftCard).join('')}</div>`;
 
-  let giftsData = [];
-  let claimsData = [];
-  let selectedGift = null;
-
-  // Elementos del DOM
-  const searchInput = document.getElementById('search');
-  const hideClaimedCheckbox = document.getElementById('hide-claimed');
-  const controlsContainer = document.getElementById('controls');
-  const progressCount = document.getElementById('progress-count');
-
-  // Modales
-  const modalBackdrop = document.getElementById('modal-backdrop');
-  const modalCancel = document.getElementById('modal-cancel');
-  const modalConfirm = document.getElementById('modal-confirm');
-  const claimerNameInput = document.getElementById('claimer-name');
-  const claimerMessageInput = document.getElementById('claimer-message');
-
-  const suggestModal = document.getElementById('suggest-modal-backdrop');
-  const btnOpenSuggest = document.getElementById('btn-open-suggest');
-  const suggestCancel = document.getElementById('suggest-cancel');
-  const suggestConfirm = document.getElementById('suggest-confirm');
-
-  const rsvpModal = document.getElementById('rsvp-modal-backdrop');
-  const btnOpenRsvp = document.getElementById('btn-open-rsvp');
-  const rsvpCancel = document.getElementById('rsvp-cancel');
-  const rsvpConfirm = document.getElementById('rsvp-confirm');
-
-  // Cargar datos
-  async function fetchData() {
-    try {
-      const [giftsRes, claimsRes] = await Promise.all([
-        db.from('gifts').select('*').order('id', { ascending: true }),
-        db.from('claims').select('*')
-      ]);
-
-      if (giftsRes.error) throw giftsRes.error;
-      if (claimsRes.error) throw claimsRes.error;
-
-      giftsData = giftsRes.data || [];
-      claimsData = claimsRes.data || [];
-
-      renderCategories();
-      renderList();
-      updateProgress();
-    } catch (err) {
-      console.error('Error cargando datos:', err);
-      if (listContainer) {
-        listContainer.innerHTML = '<p class="error">Error al cargar los regalos. Por favor, recarga la página.</p>';
-      }
-    }
-  }
-
-  // Renderizar Lista
-  function renderList() {
-    if (!listContainer) return;
-
-    const query = (searchInput?.value || '').toLowerCase().trim();
-    const hideClaimed = hideClaimedCheckbox?.checked || false;
-    const activeChip = document.querySelector('.chip.active');
-    const selectedCat = activeChip ? activeChip.dataset.cat : '*';
-
-    const filtered = giftsData.filter(gift => {
-      const giftClaims = claimsData.filter(c => c.gift_id === gift.id);
-      const isFullyClaimed = giftClaims.length >= (gift.quantity || 1);
-
-      if (hideClaimed && isFullyClaimed) return false;
-      if (selectedCat !== '*' && gift.category !== selectedCat) return false;
-      
-      if (query) {
-        const matchTitle = gift.title?.toLowerCase().includes(query);
-        const matchDesc = gift.description?.toLowerCase().includes(query);
-        return matchTitle || matchDesc;
-      }
-
-      return true;
+  // Asignar eventos a botones de reservar
+  listEl.querySelectorAll('.btn-reserve').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      openReserveModal(id);
     });
+  });
+}
 
-    if (filtered.length === 0) {
-      listContainer.innerHTML = '<p class="empty">No se encontraron regalos con esos criterios.</p>';
-      return;
-    }
-
-    listContainer.innerHTML = filtered.map(gift => {
-      const giftClaims = claimsData.filter(c => c.gift_id === gift.id);
-      const count = giftClaims.length;
-      const total = gift.quantity || 1;
-      const isFullyClaimed = count >= total;
-
-      return `
-        <div class="card ${isFullyClaimed ? 'claimed' : ''}">
-          <h3>🎁 ${escapeHtml(gift.title)}</h3>
-          <p>${escapeHtml(gift.description || '')}</p>
-          ${isFullyClaimed 
-            ? `<button class="btn-claim disabled" disabled>Reservado (Completo)</button>` 
-            : `<button class="btn-claim" data-id="${gift.id}">Reservar este regalo 🎁</button>`
-          }
+function createGiftCard(gift) {
+  const isClaimed = !!gift.reservado;
+  const imgUrl = gift.imagen_url || gift.image_url || 'https://via.placeholder.com/300x200?text=Regalo+%C3%89ster';
+  
+  return `
+    <div class="card ${isClaimed ? 'claimed' : ''}">
+      <div class="card-img-wrap">
+        <img src="${imgUrl}" alt="${gift.nombre}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x200?text=Regalo'">
+        ${isClaimed ? '<span class="claimed-badge">Reservado 🎀</span>' : ''}
+      </div>
+      <div class="card-body">
+        <h3 class="card-title">${gift.nombre}</h3>
+        <p class="card-desc">${gift.descripcion || ''}</p>
+        ${gift.link ? `<a href="${gift.link}" target="_blank" rel="noopener" class="card-link">Ver idea de referencia ↗</a>` : ''}
+        <div class="card-footer">
+          ${isClaimed ? `
+            <button class="btn btn-disabled" disabled>
+              ${gift.reservado_por ? `Reservado por ${gift.reservado_por}` : 'Reservado'}
+            </button>
+          ` : `
+            <button class="btn btn-primary btn-reserve" data-id="${gift.id}">
+              Reservar este regalo
+            </button>
+          `}
         </div>
-      `;
-    }).join('');
+      </div>
+    </div>
+  `;
+}
 
-    // Eventos a botones de reserva
-    document.querySelectorAll('.btn-claim:not(.disabled)').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = parseInt(btn.dataset.id, 10);
-        selectedGift = giftsData.find(g => g.id === id);
-        if (selectedGift && modalBackdrop) {
-          const titleEl = document.getElementById('modal-gift-name');
-          if (titleEl) titleEl.innerText = selectedGift.title;
-          modalBackdrop.classList.add('show');
-        }
-      });
-    });
+// RESERVAR REGALO
+function openReserveModal(id) {
+  const gift = giftsData.find(g => g.id == id);
+  if (!gift) return;
+  selectedGiftId = id;
+  modalGiftName.textContent = gift.nombre;
+  modalForm.style.display = 'block';
+  modalSuccess.style.display = 'none';
+  claimerNameInput.value = '';
+  if (claimerMessageInput) claimerMessageInput.value = '';
+  modalBackdrop.classList.add('show');
+}
+
+async function confirmReservation() {
+  if (!selectedGiftId) return;
+
+  const name = claimerNameInput.value.trim() || 'Alguien especial';
+  const msg = claimerMessageInput ? claimerMessageInput.value.trim() : '';
+
+  try {
+    const { error } = await supabaseClient
+      .from('regalos')
+      .update({
+        reservado: true,
+        reservado_por: name,
+        mensaje: msg
+      })
+      .eq('id', selectedGiftId);
+
+    if (error) throw error;
+
+    modalForm.style.display = 'none';
+    modalSuccess.style.display = 'block';
+    showToast('¡Regalo reservado con éxito!');
+    fetchGifts();
+  } catch (err) {
+    console.error('Error al reservar:', err);
+    alert('Hubo un error al guardar la reserva. Por favor reintenta.');
+  }
+}
+
+// EVENT LISTENERS
+function setupEventListeners() {
+  if (searchEl) searchEl.addEventListener('input', renderGifts);
+  if (hideClaimedEl) hideClaimedEl.addEventListener('change', renderGifts);
+
+  document.getElementById('modal-cancel')?.addEventListener('click', () => modalBackdrop.classList.remove('show'));
+  document.getElementById('modal-close')?.addEventListener('click', () => modalBackdrop.classList.remove('show'));
+  document.getElementById('modal-confirm')?.addEventListener('click', confirmReservation);
+
+  // Sugerir regalo
+  document.getElementById('btn-open-suggest')?.addEventListener('click', () => {
+    suggestModalBackdrop.classList.add('show');
+  });
+  document.getElementById('suggest-cancel')?.addEventListener('click', () => {
+    suggestModalBackdrop.classList.remove('show');
+  });
+  document.getElementById('suggest-confirm')?.addEventListener('click', submitSuggestion);
+
+  // Confirmar Asistencia (RSVP)
+  document.getElementById('btn-open-rsvp')?.addEventListener('click', () => {
+    rsvpModalBackdrop.classList.add('show');
+  });
+  document.getElementById('rsvp-cancel')?.addEventListener('click', () => {
+    rsvpModalBackdrop.classList.remove('show');
+  });
+  document.getElementById('rsvp-confirm')?.addEventListener('click', submitRSVP);
+}
+
+// SUGERIR Y RESERVAR
+async function submitSuggestion() {
+  const title = document.getElementById('suggest-title').value.trim();
+  const desc = document.getElementById('suggest-desc').value.trim();
+  const name = document.getElementById('suggest-name').value.trim() || 'Alguien especial';
+
+  if (!title) {
+    alert('Por favor escribe el nombre del regalo.');
+    return;
   }
 
-  function renderCategories() {
-    if (!controlsContainer) return;
-    const categories = ['*', ...new Set(giftsData.map(g => g.category).filter(Boolean))];
-    
-    controlsContainer.innerHTML = categories.map(cat => `
-      <button class="chip ${cat === '*' ? 'active' : ''}" data-cat="${escapeHtml(cat)}">
-        ${cat === '*' ? 'Todo' : escapeHtml(cat)}
-      </button>
-    `).join('');
-
-    document.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        renderList();
-      });
-    });
-  }
-
-  function updateProgress() {
-    if (!progressCount) return;
-    const totalGifts = giftsData.reduce((acc, g) => acc + (g.quantity || 1), 0);
-    const claimedGifts = claimsData.length;
-    progressCount.innerText = `${claimedGifts} de ${totalGifts} regalos reservados`;
-  }
-
-  // Modal Reserva
-  modalCancel?.addEventListener('click', () => modalBackdrop.classList.remove('show'));
-  modalConfirm?.addEventListener('click', async () => {
-    if (!selectedGift) return;
-    const claimerName = claimerNameInput?.value.trim() || 'Anónimo';
-    const message = claimerMessageInput?.value.trim() || '';
-
-    try {
-      const { error } = await db.from('claims').insert([{
-        gift_id: selectedGift.id,
-        claimer_name: claimerName,
-        message: message
+  try {
+    const { error } = await supabaseClient
+      .from('regalos')
+      .insert([{
+        nombre: title,
+        descripcion: desc,
+        reservado: true,
+        reservado_por: name,
+        categoria: 'Sugerencias'
       }]);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      modalBackdrop.classList.remove('show');
-      if (claimerNameInput) claimerNameInput.value = '';
-      if (claimerMessageInput) claimerMessageInput.value = '';
-      
-      showToast('¡Reserva realizada con éxito! 🩷');
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      showToast('Error al reservar el regalo');
-    }
-  });
+    suggestModalBackdrop.classList.remove('show');
+    showToast('¡Sugerencia añadida y reservada!');
+    document.getElementById('suggest-title').value = '';
+    document.getElementById('suggest-desc').value = '';
+    document.getElementById('suggest-name').value = '';
+    fetchGifts();
+  } catch (err) {
+    console.error('Error al sugerir:', err);
+    alert('No se pudo añadir la sugerencia.');
+  }
+}
 
-  // Modal Sugerir
-  btnOpenSuggest?.addEventListener('click', () => suggestModal.classList.add('show'));
-  suggestCancel?.addEventListener('click', () => suggestModal.classList.remove('show'));
-  suggestConfirm?.addEventListener('click', async () => {
-    const title = document.getElementById('suggest-title')?.value.trim();
-    const desc = document.getElementById('suggest-desc')?.value.trim();
-    const name = document.getElementById('suggest-name')?.value.trim() || 'Anónimo';
+// CONFIRMAR ASISTENCIA
+async function submitRSVP() {
+  const name = document.getElementById('rsvp-name').value.trim();
+  const count = document.getElementById('rsvp-count').value;
+  const comments = document.getElementById('rsvp-comments').value.trim();
 
-    if (!title) {
-      alert('Por favor introduce un título para el regalo');
-      return;
-    }
-
-    try {
-      const { data: newGift, error: giftErr } = await db.from('gifts').insert([{
-        title: title,
-        description: desc,
-        quantity: 1,
-        category: 'Sugeridos'
-      }]).select().single();
-
-      if (giftErr) throw giftErr;
-
-      await db.from('claims').insert([{
-        gift_id: newGift.id,
-        claimer_name: name,
-        message: 'Regalo añadido por el invitado'
-      }]);
-
-      suggestModal.classList.remove('show');
-      document.getElementById('suggest-title').value = '';
-      document.getElementById('suggest-desc').value = '';
-      document.getElementById('suggest-name').value = '';
-
-      showToast('¡Regalo añadido y reservado! 🎁');
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      showToast('Error al sugerir el regalo');
-    }
-  });
-
-  // Modal RSVP
-  btnOpenRsvp?.addEventListener('click', () => rsvpModal.classList.add('show'));
-  rsvpCancel?.addEventListener('click', () => rsvpModal.classList.remove('show'));
-  rsvpConfirm?.addEventListener('click', async () => {
-    const name = document.getElementById('rsvp-name')?.value.trim();
-    const count = parseInt(document.getElementById('rsvp-count')?.value || '1', 10);
-    const comments = document.getElementById('rsvp-comments')?.value.trim();
-
-    if (!name) {
-      alert('Por favor introduce tu nombre');
-      return;
-    }
-
-    try {
-      const { error } = await db.from('rsvps').insert([{
-        guest_name: name,
-        attendees_count: count,
-        comments: comments
-      }]);
-
-      if (error) throw error;
-
-      rsvpModal.classList.remove('show');
-      document.getElementById('rsvp-name').value = '';
-      document.getElementById('rsvp-comments').value = '';
-
-      showToast('¡Asistencia confirmada! Muchas gracias 🎉');
-    } catch (err) {
-      console.error(err);
-      showToast('Error al confirmar asistencia');
-    }
-  });
-
-  // Escuchadores de Filtros
-  searchInput?.addEventListener('input', renderList);
-  hideClaimedCheckbox?.addEventListener('change', renderList);
-
-  // Auxiliares
-  function escapeHtml(str) {
-    return (str || '').replace(/[&<>"']/g, m => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-    })[m]);
+  if (!name) {
+    alert('Por favor introduce tu nombre y apellidos.');
+    return;
   }
 
-  function showToast(msg) {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    toast.innerText = msg;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
-  }
+  try {
+    const { error } = await supabaseClient
+      .from('asistencias')
+      .insert([{
+        nombre: name,
+        personas: parseInt(count, 10),
+        notas: comments
+      }]);
 
-  // Carga inicial
-  fetchData();
-});
+    if (error) throw error;
+
+    rsvpModalBackdrop.classList.remove('show');
+    showToast('¡Asistencia confirmada! Mil gracias 🩷');
+    document.getElementById('rsvp-name').value = '';
+    document.getElementById('rsvp-comments').value = '';
+  } catch (err) {
+    console.error('Error al guardar asistencia:', err);
+    alert('No se pudo confirmar la asistencia.');
+  }
+}
+
+function showToast(text) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = text;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3500);
+}
