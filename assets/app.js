@@ -1,424 +1,277 @@
-const TEL_SAMUEL = '34608761401';
-const TEL_MELISSA = '34674843664';
-
-function initApp() {
-  const listEl = document.getElementById('list');
-
-  if (typeof supabase === 'undefined') {
-    if (listEl) {
-      listEl.innerHTML = `
-        <div style="background:#fce4e4; color:#900; padding:16px; border-radius:8px; text-align:center; margin:20px;">
-          <h3>⚠️ Error de Librería</h3>
-          <p>No se pudo cargar Supabase. Comprueba tu conexión a internet.</p>
-        </div>`;
-    }
+// Manejo de la aplicación Baby Shower
+document.addEventListener('DOMContentLoaded', () => {
+  const supabaseUrl = window.ENV_SUPABASE_URL;
+  const supabaseKey = window.ENV_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Faltan las credenciales de Supabase en config.js');
     return;
   }
 
-  if (typeof SUPABASE_URL === 'undefined' || typeof SUPABASE_KEY === 'undefined' || !SUPABASE_URL || !SUPABASE_KEY) {
-    if (listEl) {
-      listEl.innerHTML = `
-        <div style="background:#fff3cd; color:#856404; padding:16px; border-radius:8px; text-align:center; margin:20px;">
-          <h3>⚠️ Error de Configuración</h3>
-          <p>Revisa las claves en <code>assets/config.js</code>.</p>
-        </div>`;
-    }
-    return;
-  }
+  const db = supabase.createClient(supabaseUrl, supabaseKey);
 
-  let db;
-  try {
-    db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  } catch (err) {
-    if (listEl) {
-      listEl.innerHTML = `
-        <div style="background:#fce4e4; color:#900; padding:16px; border-radius:8px; text-align:center; margin:20px;">
-          <h3>⚠️ Error de Conexión</h3>
-          <p>${err.message}</p>
-        </div>`;
-    }
-    return;
-  }
+  let giftsData = [];
+  let claimsData = [];
+  let selectedGift = null;
 
-  let regalosList = [];
-  let selectedGiftId = null;
+  // Elementos del DOM
+  const listContainer = document.getElementById('list');
+  const searchInput = document.getElementById('search');
+  const hideClaimedCheckbox = document.getElementById('hide-claimed');
+  const controlsContainer = document.getElementById('controls');
+  const progressCount = document.getElementById('progress-count');
 
-  const searchEl = document.getElementById('search');
-  const hideClaimedEl = document.getElementById('hide-claimed');
-  const progressCountEl = document.getElementById('progress-count');
-
-  // Modal Reserva Normal
+  // Modales
   const modalBackdrop = document.getElementById('modal-backdrop');
-  const modalGiftName = document.getElementById('modal-gift-name');
+  const modalCancel = document.getElementById('modal-cancel');
+  const modalConfirm = document.getElementById('modal-confirm');
   const claimerNameInput = document.getElementById('claimer-name');
-  const claimerMsgInput = document.getElementById('claimer-message');
-  const btnCancel = document.getElementById('modal-cancel');
-  const btnConfirm = document.getElementById('modal-confirm');
-  const modalForm = document.getElementById('modal-form');
-  const modalSuccess = document.getElementById('modal-success');
-  const btnClose = document.getElementById('modal-close');
-  const toastEl = document.getElementById('toast');
+  const claimerMessageInput = document.getElementById('claimer-message');
 
-  // Modal Sugerencia de Nuevo Regalo
-  const suggestModalBackdrop = document.getElementById('suggest-modal-backdrop');
+  const suggestModal = document.getElementById('suggest-modal-backdrop');
   const btnOpenSuggest = document.getElementById('btn-open-suggest');
-  const btnSuggestCancel = document.getElementById('suggest-cancel');
-  const btnSuggestConfirm = document.getElementById('suggest-confirm');
-  const suggestTitleInput = document.getElementById('suggest-title');
-  const suggestDescInput = document.getElementById('suggest-desc');
-  const suggestNameInput = document.getElementById('suggest-name');
+  const suggestCancel = document.getElementById('suggest-cancel');
+  const suggestConfirm = document.getElementById('suggest-confirm');
 
-  // Modal Confirmación Asistencia (RSVP)
-  const rsvpModalBackdrop = document.getElementById('rsvp-modal-backdrop');
+  const rsvpModal = document.getElementById('rsvp-modal-backdrop');
   const btnOpenRsvp = document.getElementById('btn-open-rsvp');
-  const btnRsvpCancel = document.getElementById('rsvp-cancel');
-  const btnRsvpConfirm = document.getElementById('rsvp-confirm');
-  const rsvpNameInput = document.getElementById('rsvp-name');
-  const rsvpCountInput = document.getElementById('rsvp-count');
-  const rsvpCommentsInput = document.getElementById('rsvp-comments');
+  const rsvpCancel = document.getElementById('rsvp-cancel');
+  const rsvpConfirm = document.getElementById('rsvp-confirm');
 
-  async function loadGifts() {
+  // Cargar datos
+  async function fetchData() {
     try {
-      const { data, error } = await db.from('regalos').select('*').order('id', { ascending: true });
-      
-      if (error) throw error;
+      const [giftsRes, claimsRes] = await Promise.all([
+        db.from('gifts').select('*').order('id', { ascending: true }),
+        db.from('claims').select('*')
+      ]);
 
-      if (!data || data.length === 0) {
-        if (listEl) {
-          listEl.innerHTML = `
-            <div style="background:#e8f4f8; color:#1b4965; padding:16px; border-radius:8px; text-align:center; margin:20px;">
-              <h3>🌸 Sin regalos encontrados</h3>
-              <p>No hay items en la lista por ahora.</p>
-            </div>`;
-        }
-        return;
-      }
+      if (giftsRes.error) throw giftsRes.error;
+      if (claimsRes.error) throw claimsRes.error;
 
-      regalosList = data.map(item => {
-        let reservantes = [];
+      giftsData = giftsRes.data || [];
+      claimsData = claimsRes.data || [];
 
-        if (Array.isArray(item.reservantes)) {
-          reservantes = item.reservantes;
-        } else if (item.reservado_por) {
-          reservantes = item.reservado_por.split(',').map(n => ({ nombre: n.trim() })).filter(n => n.nombre);
-        }
-
-        const maxReservas = parseInt(item.max_reservas || item['Maximo reservas'] || 1, 10);
-        const estaCompleto = item.reservado || (reservantes.length >= maxReservas);
-
-        return {
-          ...item,
-          max_reservas: maxReservas,
-          reservantes: reservantes,
-          estaCompleto: estaCompleto
-        };
-      });
-
-      renderGifts();
+      renderCategories();
+      renderList();
       updateProgress();
-
     } catch (err) {
-      console.error('Error Supabase:', err);
-      if (listEl) {
-        listEl.innerHTML = `
-          <div style="background:#fce4e4; color:#900; padding:16px; border-radius:8px; text-align:center; margin:20px;">
-            <h3>⚠️ Error al conectar con la base de datos</h3>
-            <p>${err.message || 'Error de lectura'}</p>
-          </div>`;
+      console.error('Error cargando datos:', err);
+      if (listContainer) {
+        listContainer.innerHTML = '<p class="error">Hubo un error al cargar la lista. Por favor, recarga la página.</p>';
       }
     }
   }
 
-  function renderGifts() {
-    if (!listEl) return;
+  // Filtrar y Renderizar Lista
+  function renderList() {
+    if (!listContainer) return;
 
-    const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
-    const hideClaimed = hideClaimedEl ? hideClaimedEl.checked : false;
+    const query = (searchInput?.value || '').toLowerCase().trim();
+    const hideClaimed = hideClaimedCheckbox?.checked || false;
+    const activeChip = document.querySelector('.chip.active');
+    const selectedCat = activeChip ? activeChip.dataset.cat : '*';
 
-    const filtered = regalosList.filter(item => {
-      const nameMatch = item.nombre ? item.nombre.toLowerCase().includes(query) : false;
-      const descMatch = item.descripcion ? item.descripcion.toLowerCase().includes(query) : false;
-      const matchesSearch = nameMatch || descMatch;
-      const matchesClaimed = hideClaimed ? !item.estaCompleto : true;
-      return matchesSearch && matchesClaimed;
+    const filtered = giftsData.filter(gift => {
+      const giftClaims = claimsData.filter(c => c.gift_id === gift.id);
+      const isFullyClaimed = giftClaims.length >= (gift.quantity || 1);
+
+      if (hideClaimed && isFullyClaimed) return false;
+      if (selectedCat !== '*' && gift.category !== selectedCat) return false;
+      
+      if (query) {
+        const matchTitle = gift.title?.toLowerCase().includes(query);
+        const matchDesc = gift.description?.toLowerCase().includes(query);
+        return matchTitle || matchDesc;
+      }
+
+      return true;
     });
 
     if (filtered.length === 0) {
-      listEl.innerHTML = `<div class="loading"><p>No hay regalos que coincidan con la búsqueda 🌸</p></div>`;
+      listContainer.innerHTML = '<p class="empty">No se encontraron regalos con esos criterios.</p>';
       return;
     }
 
-    listEl.innerHTML = '';
-    filtered.forEach(item => {
-      const card = document.createElement('article');
-      card.className = `gift-card ${item.estaCompleto ? 'claimed' : ''}`;
+    listContainer.innerHTML = filtered.map(gift => {
+      const giftClaims = claimsData.filter(c => c.gift_id === gift.id);
+      const count = giftClaims.length;
+      const total = gift.quantity || 1;
+      const isFullyClaimed = count >= total;
 
-      const textWa = encodeURIComponent(`Hola! Tengo una duda sobre el regalo "${item.nombre}" de la lista de Éster 👶`);
-      const linkWaSamuel = `https://wa.me/${TEL_SAMUEL}?text=${textWa}`;
-      const linkWaMelissa = `https://wa.me/${TEL_MELISSA}?text=${textWa}`;
-
-      let actionHTML = '';
-      let badgeHTML = '';
-
-      if (item.max_reservas > 1) {
-        const reservasHechas = item.reservantes.length;
-        badgeHTML = `<div class="spots-badge" style="display:inline-block; background:#fdf3f5; color:#b87a8b; font-weight:bold; font-size:0.8rem; padding:4px 10px; border-radius:12px; border:1px solid #f2cfd7; margin-bottom:8px;">👥 ${reservasHechas} de ${item.max_reservas} personas han reservado este regalo</div>`;
-      }
-
-      if (item.estaCompleto) {
-        const nombres = item.reservantes.map(r => r.nombre).join(', ');
-        actionHTML = `<span class="tag-claimed">Reservado (${nombres || 'Completo'})</span>`;
-      } else {
-        const disponibles = item.max_reservas - item.reservantes.length;
-        const ctaTexto = item.max_reservas > 1 ? `Reservar un cupo (${disponibles} disp.) 🎁` : `Reservar este regalo 🎁`;
-        actionHTML = `<button class="btn-reserve" data-id="${item.id}" data-name="${item.nombre}">${ctaTexto}</button>`;
-      }
-
-      card.innerHTML = `
-        <div class="gift-card-body" style="padding: 20px; width: 100%;">
-          ${badgeHTML}
-          <h3 style="margin-top: 0; font-size: 1.25rem;">🎁 ${item.nombre || 'Regalo sin nombre'}</h3>
-          <p style="margin: 8px 0 16px 0; color: #666;">${item.descripcion || ''}</p>
-          
-          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <div class="gift-status" style="margin-top:0;">
-              ${actionHTML}
-            </div>
-            <div style="display: flex; gap: 6px;">
-              <a href="${linkWaSamuel}" target="_blank" rel="noopener noreferrer" style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
-                💬 Samuel
-              </a>
-              <a href="${linkWaMelissa}" target="_blank" rel="noopener noreferrer" style="background-color: #25D366; color: white; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
-                💬 Melissa
-              </a>
-            </div>
-          </div>
+      return `
+        <div class="card ${isFullyClaimed ? 'claimed' : ''}">
+          <h3>🎁 ${escapeHtml(gift.title)}</h3>
+          <p>${escapeHtml(gift.description || '')}</p>
+          ${isFullyClaimed 
+            ? `<button class="btn-claim disabled" disabled>Reservado (Completo)</button>` 
+            : `<button class="btn-claim" data-id="${gift.id}">Reservar este regalo 🎁</button>`
+          }
         </div>
       `;
+    }).join('');
 
-      listEl.appendChild(card);
+    // Eventos a botones de reserva
+    document.querySelectorAll('.btn-claim:not(.disabled)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.dataset.id, 10);
+        selectedGift = giftsData.find(g => g.id === id);
+        if (selectedGift && modalBackdrop) {
+          document.getElementById('modal-gift-name').innerText = selectedGift.title;
+          modalBackdrop.classList.add('show');
+        }
+      });
     });
+  }
 
-    document.querySelectorAll('.btn-reserve').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        selectedGiftId = e.target.getAttribute('data-id');
-        const giftName = e.target.getAttribute('data-name');
-        openModal(giftName);
+  function renderCategories() {
+    if (!controlsContainer) return;
+    const categories = ['*', ...new Set(giftsData.map(g => g.category).filter(Boolean))];
+    
+    controlsContainer.innerHTML = categories.map(cat => `
+      <button class="chip ${cat === '*' ? 'active' : ''}" data-cat="${escapeHtml(cat)}">
+        ${cat === '*' ? 'Todo' : escapeHtml(cat)}
+      </button>
+    `).join('');
+
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        renderList();
       });
     });
   }
 
   function updateProgress() {
-    if (!progressCountEl) return;
-    const total = regalosList.length;
-    const completados = regalosList.filter(r => r.estaCompleto).length;
-    progressCountEl.textContent = `${completados} de ${total} regalos completamente reservados 🎀`;
+    if (!progressCount) return;
+    const totalGifts = giftsData.reduce((acc, g) => acc + (g.quantity || 1), 0);
+    const claimedGifts = claimsData.length;
+    progressCount.innerText = `${claimedGifts} de ${totalGifts} regalos reservados`;
   }
 
-  // --- Lógica del Modal RSVP (Asistencia) ---
-  function openRsvpModal() {
-    if (rsvpNameInput) rsvpNameInput.value = '';
-    if (rsvpCountInput) rsvpCountInput.value = '1';
-    if (rsvpCommentsInput) rsvpCommentsInput.value = '';
-    if (rsvpModalBackdrop) rsvpModalBackdrop.classList.add('open');
-  }
+  // Modal Reserva
+  modalCancel?.addEventListener('click', () => modalBackdrop.classList.remove('show'));
+  modalConfirm?.addEventListener('click', async () => {
+    if (!selectedGift) return;
+    const claimerName = claimerNameInput?.value.trim() || 'Anónimo';
+    const message = claimerMessageInput?.value.trim() || '';
 
-  function closeRsvpModal() {
-    if (rsvpModalBackdrop) rsvpModalBackdrop.classList.remove('open');
-  }
+    try {
+      const { error } = await db.from('claims').insert([{
+        gift_id: selectedGift.id,
+        claimer_name: claimerName,
+        message: message
+      }]);
 
-  if (btnOpenRsvp) btnOpenRsvp.addEventListener('click', openRsvpModal);
-  if (btnRsvpCancel) btnRsvpCancel.addEventListener('click', closeRsvpModal);
-  if (rsvpModalBackdrop) {
-    rsvpModalBackdrop.addEventListener('click', (e) => {
-      if (e.target === rsvpModalBackdrop) closeRsvpModal();
-    });
-  }
+      if (error) throw error;
 
-  if (btnRsvpConfirm) {
-    btnRsvpConfirm.addEventListener('click', async () => {
-      const name = rsvpNameInput ? rsvpNameInput.value.trim() : '';
-      const count = rsvpCountInput ? parseInt(rsvpCountInput.value, 10) : 1;
-      const comments = rsvpCommentsInput ? rsvpCommentsInput.value.trim() : '';
+      modalBackdrop.classList.remove('show');
+      if (claimerNameInput) claimerNameInput.value = '';
+      if (claimerMessageInput) claimerMessageInput.value = '';
+      
+      showToast('¡Reserva realizada con éxito! 🩷');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showToast('Error al reservar el regalo');
+    }
+  });
 
-      if (!name) {
-        alert('Por favor, introduce tu nombre para confirmar la asistencia.');
-        return;
-      }
+  // Modal Sugerir
+  btnOpenSuggest?.addEventListener('click', () => suggestModal.classList.add('show'));
+  suggestCancel?.addEventListener('click', () => suggestModal.classList.remove('show'));
+  suggestConfirm?.addEventListener('click', async () => {
+    const title = document.getElementById('suggest-title')?.value.trim();
+    const desc = document.getElementById('suggest-desc')?.value.trim();
+    const name = document.getElementById('suggest-name')?.value.trim() || 'Anónimo';
 
-      btnRsvpConfirm.disabled = true;
-      btnRsvpConfirm.textContent = 'Guardando...';
+    if (!title) {
+      alert('Por favor introduce un título para el regalo');
+      return;
+    }
 
-      try {
-        const { error } = await db.from('asistencias').insert([
-          {
-            nombre: name,
-            asistentes: count,
-            comentarios: comments
-          }
-        ]);
+    try {
+      const { data: newGift, error: giftErr } = await db.from('gifts').insert([{
+        title: title,
+        description: desc,
+        quantity: 1,
+        category: 'Sugeridos'
+      }]).select().single();
 
-        if (error) throw error;
+      if (giftErr) throw giftErr;
 
-        closeRsvpModal();
-        showToast('¡Asistencia confirmada! Nos vemos pronto 💖');
-      } catch (err) {
-        console.error('Error al confirmar asistencia:', err);
-        alert('Ocurrió un error al guardar tu asistencia: ' + (err.message || ''));
-      } finally {
-        btnRsvpConfirm.disabled = false;
-        btnRsvpConfirm.textContent = 'Confirmar Asistencia ✨';
-      }
-    });
-  }
+      await db.from('claims').insert([{
+        gift_id: newGift.id,
+        claimer_name: name,
+        message: 'Regalo añadido por el invitado'
+      }]);
 
-  // --- Modales Estándar ---
-  function openModal(giftName) {
-    if (modalGiftName) modalGiftName.textContent = giftName;
-    if (claimerNameInput) claimerNameInput.value = '';
-    if (claimerMsgInput) claimerMsgInput.value = '';
-    if (modalForm) modalForm.style.display = 'block';
-    if (modalSuccess) modalSuccess.style.display = 'none';
-    if (modalBackdrop) modalBackdrop.classList.add('open');
-  }
+      suggestModal.classList.remove('show');
+      document.getElementById('suggest-title').value = '';
+      document.getElementById('suggest-desc').value = '';
+      document.getElementById('suggest-name').value = '';
 
-  function closeModal() {
-    if (modalBackdrop) modalBackdrop.classList.remove('open');
-    selectedGiftId = null;
-  }
+      showToast('¡Regalo añadido y reservado! 🎁');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showToast('Error al sugerir el regalo');
+    }
+  });
 
-  function openSuggestModal() {
-    if (suggestTitleInput) suggestTitleInput.value = '';
-    if (suggestDescInput) suggestDescInput.value = '';
-    if (suggestNameInput) suggestNameInput.value = '';
-    if (suggestModalBackdrop) suggestModalBackdrop.classList.add('open');
-  }
+  // Modal RSVP
+  btnOpenRsvp?.addEventListener('click', () => rsvpModal.classList.add('show'));
+  rsvpCancel?.addEventListener('click', () => rsvpModal.classList.remove('show'));
+  rsvpConfirm?.addEventListener('click', async () => {
+    const name = document.getElementById('rsvp-name')?.value.trim();
+    const count = parseInt(document.getElementById('rsvp-count')?.value || '1', 10);
+    const comments = document.getElementById('rsvp-comments')?.value.trim();
 
-  function closeSuggestModal() {
-    if (suggestModalBackdrop) suggestModalBackdrop.classList.remove('open');
-  }
+    if (!name) {
+      alert('Por favor introduce tu nombre');
+      return;
+    }
 
-  if (btnOpenSuggest) btnOpenSuggest.addEventListener('click', openSuggestModal);
-  if (btnSuggestCancel) btnSuggestCancel.addEventListener('click', closeSuggestModal);
-  if (suggestModalBackdrop) {
-    suggestModalBackdrop.addEventListener('click', (e) => {
-      if (e.target === suggestModalBackdrop) closeSuggestModal();
-    });
-  }
+    try {
+      const { error } = await db.from('rsvps').insert([{
+        guest_name: name,
+        attendees_count: count,
+        comments: comments
+      }]);
 
-  if (btnSuggestConfirm) {
-    btnSuggestConfirm.addEventListener('click', async () => {
-      const title = suggestTitleInput ? suggestTitleInput.value.trim() : '';
-      const desc = suggestDescInput ? suggestDescInput.value.trim() : '';
-      const name = suggestNameInput ? suggestNameInput.value.trim() : '';
-      const finalName = name !== '' ? name : 'Alguien muy especial';
+      if (error) throw error;
 
-      if (!title) {
-        alert('Por favor, indica qué regalo te gustaría añadir.');
-        return;
-      }
+      rsvpModal.classList.remove('show');
+      document.getElementById('rsvp-name').value = '';
+      document.getElementById('rsvp-comments').value = '';
 
-      btnSuggestConfirm.disabled = true;
-      btnSuggestConfirm.textContent = 'Guardando...';
+      showToast('¡Asistencia confirmada! Muchas gracias 🎉');
+    } catch (err) {
+      console.error(err);
+      showToast('Error al confirmar asistencia');
+    }
+  });
 
-      try {
-        const payload = {
-          nombre: title,
-          descripcion: desc || 'Sugerencia añadida por un invitado 💡',
-          reservado: true,
-          max_reservas: 1,
-          reservado_por: finalName,
-          reservantes: [{ nombre: finalName }]
-        };
+  // Escuchadores de Filtros
+  searchInput?.addEventListener('input', renderList);
+  hideClaimedCheckbox?.addEventListener('change', renderList);
 
-        const { error } = await db.from('regalos').insert([payload]);
-
-        if (error) throw error;
-
-        closeSuggestModal();
-        showToast('¡Tu regalo ha sido añadido y reservado! 🎁');
-        await loadGifts();
-      } catch (err) {
-        console.error('Error al sugerir regalo:', err);
-        alert('Ocurrió un error al guardar tu sugerencia: ' + (err.message || ''));
-      } finally {
-        btnSuggestConfirm.disabled = false;
-        btnSuggestConfirm.textContent = 'Añadir y Reservar 🎁';
-      }
-    });
-  }
-
-  if (btnCancel) btnCancel.addEventListener('click', closeModal);
-  if (btnClose) btnClose.addEventListener('click', closeModal);
-
-  if (modalBackdrop) {
-    modalBackdrop.addEventListener('click', (e) => {
-      if (e.target === modalBackdrop) closeModal();
-    });
-  }
-
-  if (btnConfirm) {
-    btnConfirm.addEventListener('click', async () => {
-      if (!selectedGiftId) return;
-
-      const item = regalosList.find(r => String(r.id) === String(selectedGiftId));
-      if (!item) return;
-
-      let name = claimerNameInput ? claimerNameInput.value.trim() : '';
-      let msg = claimerMsgInput ? claimerMsgInput.value.trim() : '';
-      let finalName = name !== '' ? name : 'Alguien muy especial';
-      if (msg !== '') finalName += ` ("${msg}")`;
-
-      const nuevosReservantes = [...item.reservantes, { nombre: finalName }];
-      const estaCompleto = nuevosReservantes.length >= item.max_reservas;
-
-      btnConfirm.disabled = true;
-      btnConfirm.textContent = 'Guardando...';
-
-      try {
-        const updatePayload = {
-          reservado: estaCompleto,
-          reservantes: nuevosReservantes,
-          reservado_por: nuevosReservantes.map(r => r.nombre).join(', ')
-        };
-
-        const { error } = await db
-          .from('regalos')
-          .update(updatePayload)
-          .eq('id', item.id);
-
-        if (error) throw error;
-
-        if (modalForm) modalForm.style.display = 'none';
-        if (modalSuccess) modalSuccess.style.display = 'block';
-
-        showToast('¡Regalo reservado con éxito! 🎉');
-        await loadGifts();
-      } catch (err) {
-        console.error('Error reservando:', err);
-        alert('Ocurrió un error al reservar: ' + (err.message || ''));
-      } finally {
-        btnConfirm.disabled = false;
-        btnConfirm.textContent = 'Reservar 🎁';
-      }
-    });
+  // Auxiliares
+  function escapeHtml(str) {
+    return (str || '').replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    })[m]);
   }
 
   function showToast(msg) {
-    if (!toastEl) return;
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    setTimeout(() => { toastEl.classList.remove('show'); }, 3500);
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.innerText = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
   }
 
-  if (searchEl) searchEl.addEventListener('input', renderGifts);
-  if (hideClaimedEl) hideClaimedEl.addEventListener('change', renderGifts);
-
-  loadGifts();
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
-}
+  // Carga inicial
+  fetchData();
+});
