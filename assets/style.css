@@ -24,13 +24,12 @@ body {
   padding: 20px 15px;
 }
 
-/* Contenedor principal */
 .container {
   max-width: 1100px;
   margin: 0 auto;
 }
 
-/* Cuadrícula de tarjetas */
+/* CUADRÍCULA DE REGALOS */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -38,7 +37,6 @@ body {
   margin-top: 25px;
 }
 
-/* Tarjeta de regalo */
 .card {
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -48,12 +46,6 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
 .card.claimed {
@@ -84,15 +76,11 @@ body {
   margin-bottom: 15px;
 }
 
-.card-link:hover {
-  text-decoration: underline;
-}
-
 .card-footer {
   margin-top: auto;
 }
 
-/* Botones */
+/* BOTONES */
 .btn {
   display: block;
   width: 100%;
@@ -121,7 +109,6 @@ body {
   cursor: not-allowed;
 }
 
-/* Badge de Reservado */
 .claimed-badge {
   display: inline-block;
   background-color: #f3d0db;
@@ -130,4 +117,71 @@ body {
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 12px;
+}
+
+/* ESTILOS DE MODALES (VENTANAS EMERGENTES FLOTANTES) */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none; /* OCULTO POR DEFECTO */
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  backdrop-filter: blur(3px);
+}
+
+.modal-backdrop.show {
+  display: flex !important; /* SE MUESTRA SOLO AL PULSAR EL BOTÓN */
+}
+
+.modal {
+  background-color: var(--card-bg);
+  padding: 25px;
+  border-radius: var(--radius);
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h3 {
+  margin-bottom: 12px;
+  font-size: 1.25rem;
+  color: var(--text-main);
+}
+
+.modal p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 15px;
+}
+
+.modal label {
+  display: block;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.modal input, 
+.modal select, 
+.modal textarea {
+  width: 100%;
+  padding: 10px 14px;
+  margin-top: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 0.95rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
 }
