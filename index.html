@@ -16,6 +16,11 @@
     body {
       text-align: center !important;
       font-family: 'Karla', sans-serif !important;
+      background-color: #fcf8f5 !important;
+      background-image: radial-gradient(#e8a5b8 0.85px, transparent 0.85px), radial-gradient(#f0b6c6 0.85px, #fcf8f5 0.85px) !important;
+      background-size: 34px 34px !important;
+      background-position: 0 0, 17px 17px !important;
+      background-attachment: fixed !important;
     }
 
     header.hero, .hero {
@@ -232,52 +237,4 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      padding: 20px;
-      backdrop-filter: blur(3px);
-    }
-    .modal-backdrop.show { display: flex !important; }
-    .modal {
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 18px;
-      max-width: 480px;
-      width: 100%;
-      text-align: left;
-    }
-
-    /* REGALOS EN FILAS DE 3 CON ALINEACIÓN CENTRADA */
-    #list, main#list {
-      display: grid !important;
-      grid-template-columns: repeat(3, 1fr) !important;
-      justify-content: center !important;
-      align-items: stretch !important;
-      gap: 22px !important;
-      max-width: 1100px !important;
-      margin: 30px auto !important;
-      padding: 0 15px !important;
-    }
-
-    /* TARJETAS CON ALTERNANCIA ROSA Y BLANCO */
-    .card, #list .card, main#list > div {
-      border-radius: 18px !important;
-      padding: 22px !important;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04) !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: space-between !important;
-      text-align: center !important;
-      align-items: center !important;
-      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-    }
-
-    /* Tarjeta Impar (Rosa: 1ª, 3ª, 5ª...) */
-    .card:nth-child(odd), #list > div:nth-child(odd) {
-      background-color: #fcecee !important;
-      border: 1px solid #f2c9d4 !important;
+      width: 10
