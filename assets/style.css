@@ -1,37 +1,75 @@
-/* REGLA VITAL: Las modales deben estar ocultas de inicio */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: none; /* OCULTO POR DEFECTO */
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 20px;
-  backdrop-filter: blur(3px);
+/* CENTRADO Y ESTILOS BONITOS PARA LA CABECERA (HERO) */
+header.hero {
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto 30px auto !important;
+  max-width: 800px !important;
+  padding: 20px 15px !important;
 }
 
-.modal-backdrop.show {
-  display: flex !important; /* Se muestran solo cuando JS añade .show */
+/* Ilustraciones flotantes / iconos superiores */
+header.hero .floaties {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-bottom: 10px !important;
 }
 
-.modal {
-  background: #ffffff;
-  padding: 25px;
-  border-radius: 18px;
-  max-width: 480px;
-  width: 100%;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-  position: relative;
+/* Subtítulo pequeño inicial */
+header.hero .kicker {
+  text-align: center !important;
+  font-family: 'Caveat', cursive, sans-serif !important;
+  font-size: 1.4rem !important;
+  color: #b87a8b !important;
+  margin-bottom: 5px !important;
 }
 
-/* Grid de tarjetas en el cuerpo */
-#list .grid, .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  padding: 20px 0;
+/* Título principal "La lista de Éster" */
+header.hero h1 {
+  text-align: center !important;
+  font-family: 'Young Serif', serif, Georgia !important;
+  font-size: 2.8rem !important;
+  color: #5a4e3c !important;
+  margin: 0 0 15px 0 !important;
+  line-height: 1.2 !important;
+}
+
+header.hero h1 em {
+  font-style: italic !important;
+  color: #b87a8b !important;
+}
+
+/* Textos informativos sueltos (sin recuadro) */
+header.hero p.sub {
+  text-align: center !important;
+  font-family: 'Karla', sans-serif !important;
+  font-size: 1.1rem !important;
+  color: #6e6252 !important;
+  line-height: 1.6 !important;
+  max-width: 650px !important;
+  margin: 20px auto 10px auto !important;
+}
+
+/* Firma "Con muchísima ilusión..." */
+header.hero .hand {
+  display: block !important;
+  text-align: center !important;
+  font-family: 'Caveat', cursive, sans-serif !important;
+  font-size: 1.5rem !important;
+  color: #b87a8b !important;
+  font-weight: 600 !important;
+  margin: 5px auto 20px auto !important;
+}
+
+/* Centrado garantizado para los bloques con recuadro */
+header.hero > div,
+.countdown-container,
+.important-box,
+.suggest-banner {
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
