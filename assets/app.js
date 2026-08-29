@@ -2,22 +2,15 @@
 document.addEventListener('DOMContentLoaded', () => {
   const listContainer = document.getElementById('list');
 
-  // Verificar Supabase CDN
+  // Claves de Supabase integradas directamente
+  const supabaseUrl = "https://yobstbrdvnqaoydrjhhk.supabase.co";
+  const supabaseKey = "sb_publishable_laR6A943f2AxxCF0DuRckA_10ojnXjS";
+
+  // Verificar librería de Supabase
   if (typeof window.supabase === 'undefined') {
     console.error('La librería de Supabase no se ha cargado.');
     if (listContainer) {
       listContainer.innerHTML = '<p class="error">Error al conectar con la base de datos (Supabase CDN no disponible). Recarga la página.</p>';
-    }
-    return;
-  }
-
-  const supabaseUrl = window.ENV_SUPABASE_URL;
-  const supabaseKey = window.ENV_SUPABASE_ANON_KEY;
-  
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('Faltan las credenciales de Supabase en config.js');
-    if (listContainer) {
-      listContainer.innerHTML = '<p class="error">Faltan las claves de configuración en config.js.</p>';
     }
     return;
   }
@@ -71,12 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error('Error cargando datos:', err);
       if (listContainer) {
-        listContainer.innerHTML = '<p class="error">Error al cargar los regalos. Por favor, revisa las políticas RLS en Supabase o recarga la página.</p>';
+        listContainer.innerHTML = '<p class="error">Error al cargar los regalos. Por favor, recarga la página.</p>';
       }
     }
   }
 
-  // Renderizar Lista (Sin la línea de "0 de 3 personas")
+  // Renderizar Lista
   function renderList() {
     if (!listContainer) return;
 
