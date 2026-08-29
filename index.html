@@ -251,10 +251,10 @@
       width: 100%;
       text-align: left;
     }
-/* DISTRIBUCIÓN Y CENTRADO EN PANTALLAS GRANDES (TABLET Y PC) */
+/* CONTENEDOR DE REGALOS EN FILAS DE 3 */
     #list, main#list {
       display: grid !important;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 320px)) !important;
+      grid-template-columns: repeat(3, 1fr) !important;
       justify-content: center !important;
       align-items: stretch !important;
       gap: 22px !important;
@@ -262,7 +262,49 @@
       margin: 30px auto !important;
       padding: 0 15px !important;
     }
-    /* Tarjeta indivudual */
+
+    /* TARJETAS CON ALTERNANCIA ROSA Y BLANCO */
+    .card, #list .card, main#list > div {
+      border-radius: 18px !important;
+      padding: 22px !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      text-align: center !important;
+      align-items: center !important;
+      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    /* Tarjeta Impar (1ª rosa, 3ª rosa, 5ª rosa...) */
+    .card:nth-child(odd), #list > div:nth-child(odd) {
+      background-color: #fcecee !important;
+      border: 1px solid #f2c9d4 !important;
+    }
+
+    /* Tarjeta Par (2ª blanca, 4ª blanca, 6ª blanca...) */
+    .card:nth-child(even), #list > div:nth-child(even) {
+      background-color: #ffffff !important;
+      border: 1px solid #f0e6df !important;
+    }
+
+    .card:hover {
+      transform: translateY(-3px) !important;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* ADAPTACIÓN AUTOMÁTICA EN DISPOSITIVOS MÁS PEQUEÑOS */
+    @media (max-width: 900px) {
+      #list, main#list {
+        grid-template-columns: repeat(2, 1fr) !important; /* 2 por fila en tablet */
+      }
+    }
+
+    @media (max-width: 600px) {
+      #list, main#list {
+        grid-template-columns: 1fr !important; /* 1 por fila en móvil */
+      }
+    }    /* Tarjeta indivudual */
     .card, #list .card, main#list > div {
       background: #ffffff !important;
       border: 1px solid #f0e6df !important;
