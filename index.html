@@ -12,13 +12,92 @@
   <link rel="stylesheet" href="assets/style.css">
   
   <style>
-    /* Estilos para el Contador */
+    /* CENTRADO GENERAL DE LA CABECERA Y TEXTOS */
+    body {
+      text-align: center !important;
+      font-family: 'Karla', sans-serif !important;
+    }
+
+    header.hero, .hero {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      margin: 0 auto !important;
+      max-width: 750px !important;
+      padding: 20px 15px !important;
+    }
+
+    /* Iconos superiores flotantes */
+    .floaties {
+      display: flex !important;
+      justify-content: center !important;
+      gap: 10px !important;
+      margin-bottom: 8px !important;
+    }
+
+    /* Textos pequeños superiores e inferiores */
+    .kicker {
+      font-family: 'Caveat', cursive !important;
+      font-size: 1.5rem !important;
+      color: #b87a8b !important;
+      margin-bottom: 5px !important;
+      text-align: center !important;
+    }
+
+    /* Título principal */
+    h1 {
+      font-family: 'Young Serif', serif !important;
+      font-size: 2.8rem !important;
+      color: #5a4e3c !important;
+      text-align: center !important;
+      margin: 10px 0 !important;
+    }
+
+    h1 em {
+      font-style: italic !important;
+      color: #b87a8b !important;
+    }
+
+    /* Textos sin recuadro bonitos y centrados */
+    p.sub {
+      font-family: 'Karla', sans-serif !important;
+      font-size: 1.15rem !important;
+      color: #6e6252 !important;
+      line-height: 1.6 !important;
+      max-width: 620px !important;
+      margin: 20px auto 8px auto !important;
+      text-align: center !important;
+    }
+
+    .hand {
+      display: block !important;
+      font-family: 'Caveat', cursive !important;
+      font-size: 1.6rem !important;
+      color: #b87a8b !important;
+      font-weight: 600 !important;
+      text-align: center !important;
+      margin: 5px auto 20px auto !important;
+    }
+
+    /* Cajas y Recuadros centrados */
+    .countdown-container, 
+    .important-box, 
+    .suggest-banner,
+    .controls {
+      margin-left: auto !important;
+      margin-right: auto !important;
+      text-align: center !important;
+    }
+
+    /* Estilos del Contador */
     .countdown-container {
       background: rgba(255, 255, 255, 0.9);
       border: 1px solid #e2d7c5;
       border-radius: 16px;
       padding: 16px 20px;
-      margin: 15px auto;
+      margin: 20px auto;
       max-width: 360px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.04);
     }
@@ -53,7 +132,7 @@
       margin-top: 4px;
     }
 
-    /* Estilos para los botones de Calendario y Asistencia */
+    /* Botones y Menús */
     .cal-dropdown {
       position: relative;
       display: inline-block;
@@ -72,10 +151,6 @@
       align-items: center;
       gap: 6px;
       box-shadow: 0 2px 8px rgba(184, 122, 139, 0.3);
-      transition: background 0.2s;
-    }
-    .cal-btn:hover {
-      background: #a36677;
     }
     .btn-rsvp {
       background: #4a7c59;
@@ -90,11 +165,6 @@
       align-items: center;
       gap: 6px;
       box-shadow: 0 2px 8px rgba(74, 124, 89, 0.3);
-      transition: background 0.2s;
-      margin-top: 8px;
-    }
-    .btn-rsvp:hover {
-      background: #3b6346;
     }
     .cal-menu {
       display: none;
@@ -111,23 +181,16 @@
       min-width: 200px;
       text-align: left;
     }
-    .cal-menu.show {
-      display: block;
-    }
+    .cal-menu.show { display: block; }
     .cal-menu a {
       display: block;
       padding: 8px 16px;
       color: #5a4e3c;
       text-decoration: none;
       font-size: 0.85rem;
-      font-weight: 500;
-    }
-    .cal-menu a:hover {
-      background: #faf6f0;
-      color: #b87a8b;
     }
 
-    /* Caja "Sin Compromiso" - Más llamativa */
+    /* Caja Importante y Banner */
     .important-box {
       background: #fff0f3;
       border: 2px solid #e8a5b8;
@@ -135,7 +198,6 @@
       padding: 20px 24px;
       margin: 25px auto;
       max-width: 580px;
-      text-align: center;
       box-shadow: 0 6px 20px rgba(232, 165, 184, 0.2);
     }
     .important-title {
@@ -144,10 +206,8 @@
       font-weight: bold;
       margin-bottom: 8px;
       text-transform: uppercase;
-      letter-spacing: 1px;
     }
 
-    /* Tarjeta Banner para Sugerir Regalos */
     .suggest-banner {
       background: #fffdf9;
       border: 2px dashed #b87a8b;
@@ -155,19 +215,7 @@
       padding: 24px;
       margin: 20px auto 30px auto;
       max-width: 600px;
-      text-align: center;
       box-shadow: 0 4px 15px rgba(184, 122, 139, 0.08);
-    }
-    .suggest-banner h3 {
-      color: #5a4e3c;
-      margin: 0 0 8px 0;
-      font-size: 1.25rem;
-    }
-    .suggest-banner p {
-      color: #7a6e5d;
-      font-size: 0.95rem;
-      margin: 0 0 16px 0;
-      line-height: 1.4;
     }
     .btn-suggest {
       background: #b87a8b;
@@ -176,14 +224,32 @@
       padding: 10px 20px;
       border-radius: 20px;
       font-weight: bold;
-      font-size: 0.95rem;
       cursor: pointer;
-      box-shadow: 0 2px 10px rgba(184, 122, 139, 0.3);
-      transition: all 0.2s ease;
     }
-    .btn-suggest:hover {
-      background: #a36677;
-      transform: translateY(-1px);
+
+    /* Modales Flotantes */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      backdrop-filter: blur(3px);
+    }
+    .modal-backdrop.show { display: flex !important; }
+    .modal {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 18px;
+      max-width: 480px;
+      width: 100%;
+      text-align: left;
     }
   </style>
 </head>
