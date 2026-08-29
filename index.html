@@ -16,11 +16,6 @@
     body {
       text-align: center !important;
       font-family: 'Karla', sans-serif !important;
-      background-color: #fcf8f5 !important;
-      background-image: radial-gradient(#e8a5b8 0.85px, transparent 0.85px), radial-gradient(#f0b6c6 0.85px, #fcf8f5 0.85px) !important;
-      background-size: 34px 34px !important;
-      background-position: 0 0, 17px 17px !important;
-      background-attachment: fixed !important;
     }
 
     header.hero, .hero {
@@ -237,4 +232,373 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 10
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      backdrop-filter: blur(3px);
+    }
+    .modal-backdrop.show { display: flex !important; }
+    .modal {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 18px;
+      max-width: 480px;
+      width: 100%;
+      text-align: left;
+    }
+/* DISTRIBUCIÓN Y CENTRADO EN PANTALLAS GRANDES (TABLET Y PC) */
+    #list, main#list {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 320px)) !important;
+      justify-content: center !important;
+      align-items: stretch !important;
+      gap: 22px !important;
+      max-width: 1100px !important;
+      margin: 30px auto !important;
+      padding: 0 15px !important;
+    }
+    /* Tarjeta indivudual */
+    .card, #list .card, main#list > div {
+      background: #ffffff !important;
+      border: 1px solid #f0e6df !important;
+      border-radius: 18px !important;
+      padding: 22px !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      text-align: left !important;
+      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    .card:hover {
+      transform: translateY(-3px) !important;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* Título del regalo */
+    .card h3, .card-title, .card strong {
+      font-size: 1.15rem !important;
+      color: #5a4e3c !important;
+      margin-bottom: 8px !important;
+    }
+
+    /* Descripción */
+    .card p, .card-desc {
+      font-size: 0.95rem !important;
+      color: #7a6e5d !important;
+      margin-bottom: 15px !important;
+      line-height: 1.5 !important;
+      flex-grow: 1 !important;
+    }
+
+    /* Botón Rosa de Reservar */
+    .card button, .card .btn-primary, .card .btn {
+      display: block !important;
+      width: 100% !important;
+      background-color: #b87a8b !important;
+      color: #ffffff !important;
+      border: none !important;
+      padding: 12px 16px !important;
+      border-radius: 25px !important;
+      font-weight: 700 !important;
+      font-size: 0.95rem !important;
+      cursor: pointer !important;
+      text-align: center !important;
+      box-shadow: 0 2px 8px rgba(184, 122, 139, 0.25) !important;
+      transition: background-color 0.2s ease !important;
+    }
+
+    .card button:hover {
+      background-color: #a36677 !important;
+    }
+
+    /* Tarjeta de regalo ya reservado */
+    .card.claimed {
+      background-color: #faf6f3 !important;
+      opacity: 0.8 !important;
+    }
+
+    .card.claimed button {
+      background-color: #e5ded8 !important;
+      color: #8c827a !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+    }
+/* CENTRADO DE CONTENIDO DENTRO DE CADA TARJETA DE REGALO */
+    .card, #list .card, main#list > div {
+      text-align: center !important;
+      align-items: center !important;
+    }
+
+    .card h3, .card-title, .card strong, .card p, .card-desc {
+      text-align: center !important;
+    }
+/* FONDO DE ESTRELLAS ROSADAS SALTEADAS POR TODA LA PÁGINA */
+    body {
+      background-color: #fcf8f5 !important;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cpath d='M 30 20 L 32 26 L 38 27 L 33 31 L 35 37 L 30 33 L 25 37 L 27 31 L 22 27 L 28 26 Z' fill='%23e8a5b8' opacity='0.45'/%3E%3Cpath d='M 170 35 L 171.5 39.5 L 176 40 L 172.5 43 L 174 47.5 L 170 45 L 166 47.5 L 167.5 43 L 164 40 L 168.5 39.5 Z' fill='%23f0b6c6' opacity='0.4'/%3E%3Cpath d='M 100 110 L 102 116 L 108 117 L 103 121 L 105 127 L 100 123 L 95 127 L 97 121 L 92 117 L 98 116 Z' fill='%23e8a5b8' opacity='0.4'/%3E%3Cpath d='M 190 160 L 191.2 163.5 L 195 164 L 192 166.5 L 193 170 L 190 168 L 187 170 L 188 166.5 L 185 164 L 188.8 163.5 Z' fill='%23d88fa7' opacity='0.4'/%3E%3Cpath d='M 35 175 L 36.5 179.5 L 41 180 L 37.5 183 L 39 187.5 L 35 185 L 31 187.5 L 32.5 183 L 29 180 L 33.5 179.5 Z' fill='%23f0b6c6' opacity='0.45'/%3E%3C/svg%3E") !important;
+      background-repeat: repeat !important;
+      background-attachment: fixed !important;
+    }
+  </style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="floaties" aria-hidden="true">
+    <svg class="floaty slow" style="top:13%;left:8%" width="52" height="52" viewBox="0 0 52 52" fill="none"><path d="M36 8a17 17 0 1 0 8 29c-5 3-12 3-17-2a15 15 0 0 1 9-27z" stroke="#c9b891" stroke-width="2.2" stroke-linejoin="round"/></svg>
+    <svg class="floaty" style="top:22%;right:9%" width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M16 3l3.2 9.4L29 16l-9.8 3.6L16 29l-3.2-9.4L3 16l9.8-3.6z" stroke="#e8a5b8" stroke-width="2" stroke-linejoin="round"/></svg>
+    <svg class="floaty slower" style="bottom:22%;left:15%" width="24" height="24" viewBox="0 0 32 32" fill="none"><path d="M16 3l3.2 9.4L29 16l-9.8 3.6L16 29l-3.2-9.4L3 16l9.8-3.6z" stroke="#d9a08b" stroke-width="2" stroke-linejoin="round"/></svg>
+    <svg class="floaty slower" style="top:50%;right:16%" width="78" height="42" viewBox="0 0 78 42" fill="none"><path d="M12 32c-6 0-8-7-3-10-1-8 8-12 13-7 2-7 13-8 16-1 7-3 14 3 11 10 5 2 4 8-2 8z" stroke="#c9b891" stroke-width="2.2" stroke-linejoin="round"/></svg>
+    <svg class="floaty" style="bottom:12%;right:32%" width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M13 22s-8-5.2-8-11a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 5.8-8 11-8 11z" stroke="#a8b79b" stroke-width="2" stroke-linejoin="round"/></svg>
+  </div>
+
+  <p class="kicker">Nuestra pequeña viene en camino</p>
+  <h1>La lista de <em>Éster</em></h1>
+
+  <!-- DETALLES DEL EVENTO -->
+  <div style="background: rgba(255,255,255,0.85); display: inline-flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 24px; border-radius: 16px; margin: 14px 0; border: 1px solid #e2d7c5; text-align: center; color: #5a4e3c; font-size: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); max-width: 90%;">
+    <div>📅 <strong>Fecha:</strong> 15 de Septiembre de 2026</div>
+    <div>⏰ <strong>Hora:</strong> 17:30 hrs</div>
+    <div>📍 <strong>Lugar:</strong> <a href="Https://maps.app.goo.gl/wcsY46PrSXk3Q8VR8?g_st=ic" target="_blank" rel="noopener noreferrer" style="color: #b87a8b; font-weight: bold; text-decoration: underline;">Ver ubicación en Google Maps 🗺️</a></div>
+    
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px;">
+      <!-- BOTÓN CONFIRMAR ASISTENCIA -->
+      <button class="btn-rsvp" id="btn-open-rsvp">
+        ✅ Confirmar Asistencia
+      </button>
+
+      <!-- BOTÓN AÑADIR AL CALENDARIO -->
+      <div class="cal-dropdown">
+        <button class="cal-btn" onclick="toggleCalMenu(event)">
+          📅 Añadir a mi calendario ▾
+        </button>
+        <div class="cal-menu" id="cal-menu">
+          <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Baby+Shower+de+%C3%89ster+%F0%9F%8E%80&dates=20260915T163000Z/20260915T193000Z&details=%C2%A1Te+esperamos+para+celebrar+la+llegada+de+%C3%89ster%21+%F0%9F%A9%B7" target="_blank" rel="noopener">
+            🗓️ Google Calendar
+          </a>
+          <a href="javascript:void(0)" onclick="downloadICS()">
+            🍏 Apple / Outlook (.ics)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTADOR HACIA ATRÁS -->
+  <div class="countdown-container">
+    <div class="countdown-title">⏳ ¡Falta muy poco!</div>
+    <div class="countdown-timer">
+      <div class="countdown-block"><span class="countdown-number" id="cd-days">00</span><span class="countdown-label">Días</span></div>
+      <div class="countdown-block"><span class="countdown-number" id="cd-hours">00</span><span class="countdown-label">Hs</span></div>
+      <div class="countdown-block"><span class="countdown-number" id="cd-mins">00</span><span class="countdown-label">Min</span></div>
+      <div class="countdown-block"><span class="countdown-number" id="cd-secs">00</span><span class="countdown-label">Seg</span></div>
+    </div>
+  </div>
+
+  <p class="sub">Gracias por acompañarnos en esta bonita aventura. Aquí van algunas ideas de cosas que nos harían mucha ilusión Si quieres elige una y resérvala para que no haya regalos repetidos.</p>
+  <span class="hand">— Con muchísima ilusión, Melissa y Samuel 🩷</span>
+
+  <!-- CAJA DESTACADA IMPORTANTE -->
+  <div class="important-box">
+    <div class="important-title">⚠️ ¡IMPORTANTE!</div>
+    <p style="margin: 0; color: #5a4e3c; font-size: 0.98rem; line-height: 1.5;">
+      <strong>Sin ningún compromiso 🤍</strong> Esto son solo ideas para quien le apetezca.
+      Podéis juntaros entre varios para un regalo, traer otra cosa que os haga ilusión…
+      o simplemente venir a darnos un abrazo, que es lo que más nos importa.
+    </p>
+  </div>
+
+  <div class="clothesline-wrap">
+    <svg id="clothesline" viewBox="0 0 600 96" aria-hidden="true"></svg>
+    <div class="clothesline-label" id="progress-count">…</div>
+  </div>
+</header>
+
+<nav class="controls">
+  <div class="search-box">
+    <span aria-hidden="true">🔍</span>
+    <input type="search" id="search" placeholder="Buscar un regalo…" autocomplete="off">
+  </div>
+  <div class="controls-inner" id="controls">
+    <button class="chip active" data-cat="*">Todo</button>
+  </div>
+  <label class="toggle-claimed">
+    <input type="checkbox" id="hide-claimed"> Ocultar ya elegidos
+  </label>
+</nav>
+
+<!-- CAJA PARA SUGERIR UN REGALO NUEVO -->
+<div class="suggest-banner">
+  <h3>💡 ¿Se te ocurre otra cosa que necesitemos?</h3>
+  <p>Si tienes en mente algún regalo especial o detalle útil que no está en la lista, ¡puedes añadirlo tú mismo/a y dejarlo reservado!</p>
+  <button class="btn-suggest" id="btn-open-suggest">➕ Añadir otro regalo a la lista</button>
+</div>
+
+<main id="list">
+  <div class="loading">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <p>Cargando la lista para Éster…</p>
+  </div>
+</main>
+
+<footer>
+  <p class="hand">¡Gracias de corazón!</p>
+  <p>Nada de esta lista es obligatorio: es solo para ayudar a quien quiera.<br>
+  Si preferís sorprendernos con otra cosa, o regalar algo entre varios, también nos encantará 🤍</p>
+</footer>
+
+<!-- Modal de reserva de regalo -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal" id="modal">
+    <span class="tag-hole" aria-hidden="true"></span>
+    <svg class="tag-string" width="110" height="80" viewBox="0 0 110 80" fill="none" aria-hidden="true"><path d="M4 6 C 30 10, 44 28, 55 56" stroke="#8d7f68" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 5"/></svg>
+    <div id="modal-form">
+      <h3>Reservar <span class="gift-name" id="modal-gift-name"></span></h3>
+      <p class="note" id="modal-note">Al reservarlo, el cupo quedará registrado. Tu nombre es opcional y solo lo veremos nosotros.</p>
+      <label for="claimer-name">Tu nombre (opcional)</label>
+      <input type="text" id="claimer-name" maxlength="80" placeholder="Ej.: la abuela Rosa, o «los primos de Tenerife»">
+      <label for="claimer-message">Un mensajito para Éster (opcional)</label>
+      <textarea id="claimer-message" rows="2" maxlength="300" placeholder="¡Bienvenida a nuestras vidas, Éster!"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modal-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="modal-confirm">Reservar 🎁</button>
+      </div>
+    </div>
+    <div id="modal-success" class="success" style="display:none">
+      <div class="big">🎀</div>
+      <h3 id="success-title">¡Reservado!</h3>
+      <p id="success-text">Mil gracias, nos hace muchísima ilusión.<br>Ya está reservado tu cupo para este regalo.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="modal-close">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Sugerir/Añadir Regalo Nuevo -->
+<div class="modal-backdrop" id="suggest-modal-backdrop">
+  <div class="modal">
+    <h3>💡 Sugerir y reservar un nuevo regalo</h3>
+    <p class="note">Añade la idea que tienes pensada. Se guardará en la lista marcada como reservada por ti.</p>
+    
+    <label for="suggest-title">¿Qué regalo se te ha ocurrido? *</label>
+    <input type="text" id="suggest-title" maxlength="100" placeholder="Ej.: Conjunto de ropita 3-6 meses" required>
+
+    <label for="suggest-desc">Detalles o descripción (opcional)</label>
+    <textarea id="suggest-desc" rows="2" maxlength="200" placeholder="Ej.: Marca, color, talla o algún detalle..."></textarea>
+
+    <label for="suggest-name">Tu nombre (opcional)</label>
+    <input type="text" id="suggest-name" maxlength="80" placeholder="Ej.: Tía Ana">
+
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="btn btn-ghost" id="suggest-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="suggest-confirm">Añadir y Reservar 🎁</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmar Asistencia (RSVP) -->
+<div class="modal-backdrop" id="rsvp-modal-backdrop">
+  <div class="modal">
+    <h3>✅ Confirmar Asistencia</h3>
+    <p class="note">¡Nos encantaría contar contigo en la celebración de Éster!</p>
+    
+    <label for="rsvp-name">Nombre y apellidos *</label>
+    <input type="text" id="rsvp-name" maxlength="100" placeholder="Ej.: María Gómez" required>
+
+    <label for="rsvp-count">¿Cuántas personas vendréis en total? *</label>
+    <select id="rsvp-count" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 12px; font-size: 1rem;">
+      <option value="1">1 persona (solo yo)</option>
+      <option value="2">2 personas</option>
+      <option value="3">3 personas</option>
+      <option value="4">4 personas</option>
+      <option value="5">5 personas o más</option>
+    </select>
+
+    <label for="rsvp-comments">Notas o alergias (opcional)</label>
+    <textarea id="rsvp-comments" rows="2" maxlength="200" placeholder="Ej.: Iremos con carrito / Alergia al gluten..."></textarea>
+
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="btn btn-ghost" id="rsvp-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="rsvp-confirm" style="background-color: #4a7c59;">Confirmar Asistencia ✨</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- LÓGICA DEL CALENDARIO Y CONTADOR -->
+<script>
+  function toggleCalMenu(e) {
+    e.stopPropagation();
+    document.getElementById('cal-menu').classList.toggle('show');
+  }
+
+  document.addEventListener('click', function() {
+    const menu = document.getElementById('cal-menu');
+    if (menu) menu.classList.remove('show');
+  });
+
+  function downloadICS() {
+    const icsData = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Baby Shower Ester//ES",
+      "BEGIN:VEVENT",
+      "SUMMARY:Baby Shower de Éster 🎀",
+      "DESCRIPTION:¡Te esperamos para celebrar la llegada de Éster con nosotros!",
+      "LOCATION:Ubicación del evento",
+      "DTSTART:20260915T163000Z",
+      "DTEND:20260915T193000Z",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'Baby_Shower_Ester.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  const targetDate = new Date('September 15, 2026 17:30:00').getTime();
+
+  function updateCountdown() {
+    const now = new Date().getTime();
+    const difference = targetDate - now;
+
+    if (difference <= 0) {
+      document.querySelector('.countdown-container').innerHTML = '<div class="countdown-title">🎉 ¡HOY ES EL BABY SHOWER! 🎉</div>';
+      return;
+    }
+
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+    document.getElementById('cd-days').innerText = days < 10 ? '0' + days : days;
+    document.getElementById('cd-hours').innerText = hours < 10 ? '0' + hours : hours;
+    document.getElementById('cd-mins').innerText = minutes < 10 ? '0' + minutes : minutes;
+    document.getElementById('cd-secs').innerText = seconds < 10 ? '0' + seconds : seconds;
+  }
+
+  setInterval(updateCountdown, 1000);
+  updateCountdown();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html> 
