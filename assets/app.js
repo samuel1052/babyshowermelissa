@@ -1,5 +1,5 @@
 // Manejo de la aplicación Baby Shower
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const supabaseUrl = window.ENV_SUPABASE_URL;
   const supabaseKey = window.ENV_SUPABASE_ANON_KEY;
   
@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  const db = supabase.createClient(supabaseUrl, supabaseKey);
+  // Inicializar Supabase
+  const db = window.supabase.createClient(supabaseUrl, supabaseKey);
 
   let giftsData = [];
   let claimsData = [];
@@ -41,10 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cargar datos
   async function fetchData() {
     try {
-      const [giftsRes, claimsRes] = await Promise.all([
-        db.from('gifts').select('*').order('id', { ascending: true }),
-        db.from('claims').select('*')
-      ]);
+      const giftsRes = await db.from('gifts').select('*').order('id', { ascending: true });
+      const claimsRes = await db.from('claims').select('*');
 
       if (giftsRes.error) throw giftsRes.error;
       if (claimsRes.error) throw claimsRes.error;
@@ -63,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Filtrar y Renderizar Lista
+  // Renderizar Lista (Sin la línea de "0 de 3 personas")
   function renderList() {
     if (!listContainer) return;
 
@@ -117,7 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = parseInt(btn.dataset.id, 10);
         selectedGift = giftsData.find(g => g.id === id);
         if (selectedGift && modalBackdrop) {
-          document.getElementById('modal-gift-name').innerText = selectedGift.title;
+          const titleEl = document.getElementById('modal-gift-name');
+          if (titleEl) titleEl.innerText = selectedGift.title;
           modalBackdrop.classList.add('show');
         }
       });
