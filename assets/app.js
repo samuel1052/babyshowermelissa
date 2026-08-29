@@ -1,14 +1,27 @@
 // Manejo de la aplicación Baby Shower
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
+  const listContainer = document.getElementById('list');
+
+  // Verificar Supabase CDN
+  if (typeof window.supabase === 'undefined') {
+    console.error('La librería de Supabase no se ha cargado.');
+    if (listContainer) {
+      listContainer.innerHTML = '<p class="error">Error al conectar con la base de datos (Supabase CDN no disponible). Recarga la página.</p>';
+    }
+    return;
+  }
+
   const supabaseUrl = window.ENV_SUPABASE_URL;
   const supabaseKey = window.ENV_SUPABASE_ANON_KEY;
   
   if (!supabaseUrl || !supabaseKey) {
     console.error('Faltan las credenciales de Supabase en config.js');
+    if (listContainer) {
+      listContainer.innerHTML = '<p class="error">Faltan las claves de configuración en config.js.</p>';
+    }
     return;
   }
 
-  // Inicializar Supabase
   const db = window.supabase.createClient(supabaseUrl, supabaseKey);
 
   let giftsData = [];
@@ -16,7 +29,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   let selectedGift = null;
 
   // Elementos del DOM
-  const listContainer = document.getElementById('list');
   const searchInput = document.getElementById('search');
   const hideClaimedCheckbox = document.getElementById('hide-claimed');
   const controlsContainer = document.getElementById('controls');
@@ -42,8 +54,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Cargar datos
   async function fetchData() {
     try {
-      const giftsRes = await db.from('gifts').select('*').order('id', { ascending: true });
-      const claimsRes = await db.from('claims').select('*');
+      const [giftsRes, claimsRes] = await Promise.all([
+        db.from('gifts').select('*').order('id', { ascending: true }),
+        db.from('claims').select('*')
+      ]);
 
       if (giftsRes.error) throw giftsRes.error;
       if (claimsRes.error) throw claimsRes.error;
@@ -57,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
       console.error('Error cargando datos:', err);
       if (listContainer) {
-        listContainer.innerHTML = '<p class="error">Hubo un error al cargar la lista. Por favor, recarga la página.</p>';
+        listContainer.innerHTML = '<p class="error">Error al cargar los regalos. Por favor, revisa las políticas RLS en Supabase o recarga la página.</p>';
       }
     }
   }
