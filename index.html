@@ -127,6 +127,26 @@
       color: #b87a8b;
     }
 
+    /* Caja "Sin Compromiso" - Más llamativa */
+    .important-box {
+      background: #fff0f3;
+      border: 2px solid #e8a5b8;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin: 25px auto;
+      max-width: 580px;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(232, 165, 184, 0.2);
+    }
+    .important-title {
+      color: #b87a8b;
+      font-size: 1.15rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
     /* Tarjeta Banner para Sugerir Regalos */
     .suggest-banner {
       background: #fffdf9;
@@ -185,7 +205,7 @@
   <div style="background: rgba(255,255,255,0.85); display: inline-flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 24px; border-radius: 16px; margin: 14px 0; border: 1px solid #e2d7c5; text-align: center; color: #5a4e3c; font-size: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); max-width: 90%;">
     <div>📅 <strong>Fecha:</strong> 15 de Septiembre de 2026</div>
     <div>⏰ <strong>Hora:</strong> 17:30 hrs</div>
-    <div>📍 <strong>Lugar:</strong> <a href="Https://maps.app.goo.gl/wcsY46PrSXk3Q8VR8?g_st=ic" target="_blank" rel="noopener noreferrer" style="color: #b87a8b; font-weight: bold; text-decoration: underline;">Casa de Samuel y Melissa (Ver en Google Maps 🗺️)</a></div>
+    <div>📍 <strong>Lugar:</strong> <a href="Https://maps.app.goo.gl/wcsY46PrSXk3Q8VR8?g_st=ic" target="_blank" rel="noopener noreferrer" style="color: #b87a8b; font-weight: bold; text-decoration: underline;">Ver ubicación en Google Maps 🗺️</a></div>
     
     <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px;">
       <!-- BOTÓN CONFIRMAR ASISTENCIA -->
@@ -199,7 +219,7 @@
           📅 Añadir a mi calendario ▾
         </button>
         <div class="cal-menu" id="cal-menu">
-          <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Baby+Shower+de+%C3%89ster+%F0%9F%8E%80&dates=20260915T163000Z/20260915T193000Z&details=%C2%A1Te+esperamos+para+celebrar+la+llegada+de+%C3%89ster%21+%F0%9F%A9%B7&location=Casa+de+Samuel+y+Melissa" target="_blank" rel="noopener">
+          <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Baby+Shower+de+%C3%89ster+%F0%9F%8E%80&dates=20260915T163000Z/20260915T193000Z&details=%C2%A1Te+esperamos+para+celebrar+la+llegada+de+%C3%89ster%21+%F0%9F%A9%B7" target="_blank" rel="noopener">
             🗓️ Google Calendar
           </a>
           <a href="javascript:void(0)" onclick="downloadICS()">
@@ -221,13 +241,17 @@
     </div>
   </div>
 
-  <p class="sub">Gracias por acompañarnos en esta bonita aventura. Aquí van algunas ideas de cosas que nos harían mucha ilusión — elige una y resérvala para que no haya regalos repetidos.</p>
+  <p class="sub">Gracias por acompañarnos en esta bonita aventura. Aquí van algunas ideas de cosas que nos harían mucha ilusión Si quieres elige una y resérvala para que no haya regalos repetidos.</p>
   <span class="hand">— Con muchísima ilusión, Melissa y Samuel 🩷</span>
 
-  <div class="no-pressure">
-    <p><strong>Sin ningún compromiso 🤍</strong> Esto son solo ideas para quien le apetezca.
-    Podéis juntaros entre varios para un regalo, traer otra cosa que os haga ilusión…
-    o simplemente venir a darnos un abrazo, que es lo que más nos importa.</p>
+  <!-- CAJA DESTACADA IMPORTANTE -->
+  <div class="important-box">
+    <div class="important-title">⚠️ ¡IMPORTANTE!</div>
+    <p style="margin: 0; color: #5a4e3c; font-size: 0.98rem; line-height: 1.5;">
+      <strong>Sin ningún compromiso 🤍</strong> Esto son solo ideas para quien le apetezca.
+      Podéis juntaros entre varios para un regalo, traer otra cosa que os haga ilusión…
+      o simplemente venir a darnos un abrazo, que es lo que más nos importa.
+    </p>
   </div>
 
   <div class="clothesline-wrap">
@@ -369,7 +393,7 @@
       "BEGIN:VEVENT",
       "SUMMARY:Baby Shower de Éster 🎀",
       "DESCRIPTION:¡Te esperamos para celebrar la llegada de Éster con nosotros!",
-      "LOCATION:Casa de Samuel y Melissa",
+      "LOCATION:Ubicación del evento",
       "DTSTART:20260915T163000Z",
       "DTEND:20260915T193000Z",
       "END:VEVENT",
