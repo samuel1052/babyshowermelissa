@@ -215,7 +215,7 @@ async function confirmReservation() {
     fetchGifts();
   } catch (err) {
     console.error('Error al reservar:', err);
-    alert('Hubo un error al guardar la reserva. Por favor reintenta.');
+    alert('Hubo un error al guardar la reserva: ' + (err.message || 'Error de conexión'));
   }
 }
 
@@ -280,10 +280,11 @@ async function submitSuggestion() {
     fetchGifts();
   } catch (err) {
     console.error('Error al sugerir:', err);
-    alert('No se pudo añadir la sugerencia.');
+    alert('No se pudo añadir la sugerencia: ' + (err.message || ''));
   }
 }
 
+// ASISTENCIAS CORREGIDO SEGÚN TUS COLUMNAS EXACTAS (nombre, asistentes, comentarios)
 async function submitRSVP() {
   const nameEl = document.getElementById('rsvp-name');
   const countEl = document.getElementById('rsvp-count');
@@ -303,8 +304,8 @@ async function submitRSVP() {
       .from('asistencias')
       .insert([{
         nombre: name,
-        personas: parseInt(count, 10),
-        notas: comments
+        asistentes: parseInt(count, 10),
+        comentarios: comments
       }]);
 
     if (error) throw error;
@@ -315,7 +316,7 @@ async function submitRSVP() {
     if (commentsEl) commentsEl.value = '';
   } catch (err) {
     console.error('Error al guardar asistencia:', err);
-    alert('No se pudo confirmar la asistencia.');
+    alert('No se pudo confirmar la asistencia: ' + (err.message || ''));
   }
 }
 
